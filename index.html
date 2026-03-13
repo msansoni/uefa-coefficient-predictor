@@ -264,6 +264,94 @@ a:hover { color: var(--text); }
   font-style: italic;
 }
 
+/* ── Standings Table ────────────────────────────── */
+.standings-section {
+  padding: 0 20px 20px;
+}
+.standings-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.standings-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+}
+.standings-header h3 {
+  font-size: 0.85rem; font-weight: 700; color: var(--text);
+}
+.standings-header .legend {
+  display: flex; gap: 14px; font-size: 0.65rem; color: var(--text-muted);
+}
+.standings-header .legend span {
+  display: flex; align-items: center; gap: 4px;
+}
+.standings-header .legend .dot {
+  width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+}
+.standings-table {
+  width: 100%; border-collapse: collapse; font-size: 0.78rem;
+}
+.standings-table thead th {
+  text-align: left; font-weight: 600; color: var(--text-muted);
+  padding: 8px 10px; border-bottom: 1px solid var(--border);
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.standings-table thead th.num { text-align: right; }
+.standings-table tbody td {
+  padding: 10px 10px; border-bottom: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+  vertical-align: middle;
+}
+.standings-table tbody td.num { text-align: right; font-weight: 600; }
+.standings-table tbody tr { transition: background 0.2s; }
+.standings-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+.standings-table tbody tr.top2-row { background: rgba(34,197,94,0.05); }
+.standings-table tbody tr.top2-row:hover { background: rgba(34,197,94,0.1); }
+.standings-table .rank-cell {
+  font-weight: 800; font-size: 0.85rem; color: var(--text-muted);
+  width: 30px; text-align: center;
+}
+.standings-table .rank-cell.top { color: var(--green); }
+.standings-table .nation-cell {
+  display: flex; align-items: center; gap: 8px;
+}
+.standings-table .nation-cell img {
+  width: 22px; height: 16px; border-radius: 2px;
+}
+.standings-table .nation-cell .name { font-weight: 600; }
+.standings-table .nation-cell .clubs { font-size: 0.68rem; color: var(--text-muted); }
+.standings-table .coeff-current { color: var(--text-secondary); }
+.standings-table .coeff-confirmed { color: var(--green); font-weight: 700; }
+.standings-table .range-cell {
+  display: flex; align-items: center; gap: 0; height: 28px; position: relative;
+}
+.range-bar-wrap {
+  flex: 1; height: 18px; position: relative; border-radius: 3px;
+  background: rgba(255,255,255,0.04); overflow: visible;
+}
+.range-bar {
+  position: absolute; height: 100%; border-radius: 3px; opacity: 0.3;
+  transition: left 0.4s, width 0.4s;
+}
+.range-iqr {
+  position: absolute; height: 100%; border-radius: 3px; opacity: 0.6;
+  transition: left 0.4s, width 0.4s;
+}
+.range-median {
+  position: absolute; top: -2px; bottom: -2px; width: 2px;
+  border-radius: 1px; transition: left 0.4s;
+}
+.range-label {
+  font-size: 0.65rem; color: var(--text-muted); white-space: nowrap;
+  min-width: 36px; text-align: center;
+}
+.standings-table .top2-pct {
+  font-weight: 800; font-size: 0.9rem;
+}
+
 /* ── Bottom Charts ──────────────────────────────── */
 .charts-section {
   padding: 20px;
@@ -342,6 +430,11 @@ footer {
   .comp-tabs { padding: 12px 8px 0; }
   .header h1 { font-size: 1.2rem; }
   .callout .callout-value { font-size: 1.5rem; }
+  .standings-section { padding: 0 8px 16px; }
+  .standings-card { overflow-x: auto; }
+  .standings-table { min-width: 700px; }
+  .standings-header { flex-direction: column; gap: 8px; align-items: flex-start; }
+  .standings-header .legend { flex-wrap: wrap; }
 }
 </style>
 </head>
@@ -359,6 +452,34 @@ footer {
   <div class="callout-label">England stays in top 2</div>
   <div class="callout-value" id="eng-top2">—</div>
   <div class="callout-sub" id="eng-sub">Loading simulations…</div>
+</div>
+
+<!-- Coefficient Standings -->
+<div class="standings-section">
+  <div class="standings-card">
+    <div class="standings-header">
+      <h3>Coefficient Standings</h3>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--text-secondary)"></span> Current</span>
+        <span><span class="dot" style="background:var(--green)"></span> Confirmed</span>
+        <span><span class="dot" style="background:#4f8fff;opacity:0.6"></span> Projected Range (MC)</span>
+      </div>
+    </div>
+    <table class="standings-table">
+      <thead>
+        <tr>
+          <th style="width:30px">#</th>
+          <th>Nation</th>
+          <th class="num">Current</th>
+          <th class="num">+Confirmed</th>
+          <th class="num">Projected Coeff</th>
+          <th style="min-width:180px">Simulation Range</th>
+          <th class="num">Top 2</th>
+        </tr>
+      </thead>
+      <tbody id="standings-body"></tbody>
+    </table>
+  </div>
 </div>
 
 <!-- Competition Tabs -->
@@ -1001,6 +1122,167 @@ document.querySelectorAll('.comp-tab').forEach(tab => {
 });
 
 // ══════════════════════════════════════════════════════════════
+// COEFFICIENT STANDINGS TABLE
+// ══════════════════════════════════════════════════════════════
+
+/** Calculate deterministic additional points from user-entered results only */
+function calcConfirmedPoints() {
+  const confirmed = {};
+  TRACKED.forEach(c => confirmed[c] = 0);
+
+  for (const comp of ['CL','EL','ECL']) {
+    const bonus = ROUND_BONUS[comp];
+    const ties = R16_TIES[comp];
+
+    // R16: second leg scores entered
+    for (const tie of ties) {
+      const ur = userResults[tie.id];
+      if (!ur || ur.sl_hg === undefined || ur.sl_ag === undefined) continue;
+      // Second leg match points (sl_hg = away club home goals, sl_ag = home club away goals)
+      if (TRACKED.includes(tie.ac)) confirmed[tie.ac] += matchPts(ur.sl_hg, ur.sl_ag);
+      if (TRACKED.includes(tie.hc)) confirmed[tie.hc] += matchPts(ur.sl_ag, ur.sl_hg);
+      // Qualifying bonus for winner
+      const homeAgg = tie.fl_hg + ur.sl_ag;
+      const awayAgg = tie.fl_ag + ur.sl_hg;
+      let winnerCountry = null;
+      if (homeAgg > awayAgg) winnerCountry = tie.hc;
+      else if (awayAgg > homeAgg) winnerCountry = tie.ac;
+      else if (ur.penWinner === 'home') winnerCountry = tie.hc;
+      else if (ur.penWinner === 'away') winnerCountry = tie.ac;
+      if (winnerCountry && TRACKED.includes(winnerCountry)) {
+        confirmed[winnerCountry] += bonus;
+      }
+    }
+
+    // QF/SF: check user-entered scores
+    for (let qi = 0; qi < 4; qi++) {
+      const id = `${comp}-QF-${qi}`;
+      const ur = userResults[id];
+      const bs = bracketState[id];
+      if (!ur || !bs) continue;
+      if (ur.fl_hg !== undefined && ur.fl_ag !== undefined) {
+        if (TRACKED.includes(bs.club1.country)) confirmed[bs.club1.country] += matchPts(ur.fl_hg, ur.fl_ag);
+        if (TRACKED.includes(bs.club2.country)) confirmed[bs.club2.country] += matchPts(ur.fl_ag, ur.fl_hg);
+      }
+      if (ur.sl_hg !== undefined && ur.sl_ag !== undefined) {
+        if (TRACKED.includes(bs.club2.country)) confirmed[bs.club2.country] += matchPts(ur.sl_hg, ur.sl_ag);
+        if (TRACKED.includes(bs.club1.country)) confirmed[bs.club1.country] += matchPts(ur.sl_ag, ur.sl_hg);
+      }
+      // QF qualifier bonus
+      const winner = getTwoLegWinner(id, bs.club1, bs.club2);
+      if (winner && TRACKED.includes(winner.country)) {
+        confirmed[winner.country] += bonus;
+      }
+    }
+    for (let si = 0; si < 2; si++) {
+      const id = `${comp}-SF-${si}`;
+      const ur = userResults[id];
+      const bs = bracketState[id];
+      if (!ur || !bs) continue;
+      if (ur.fl_hg !== undefined && ur.fl_ag !== undefined) {
+        if (TRACKED.includes(bs.club1.country)) confirmed[bs.club1.country] += matchPts(ur.fl_hg, ur.fl_ag);
+        if (TRACKED.includes(bs.club2.country)) confirmed[bs.club2.country] += matchPts(ur.fl_ag, ur.fl_hg);
+      }
+      if (ur.sl_hg !== undefined && ur.sl_ag !== undefined) {
+        if (TRACKED.includes(bs.club2.country)) confirmed[bs.club2.country] += matchPts(ur.sl_hg, ur.sl_ag);
+        if (TRACKED.includes(bs.club1.country)) confirmed[bs.club1.country] += matchPts(ur.sl_ag, ur.sl_hg);
+      }
+      const winner = getTwoLegWinner(id, bs.club1, bs.club2);
+      if (winner && TRACKED.includes(winner.country)) {
+        confirmed[winner.country] += bonus;
+      }
+    }
+    // Final
+    const fId = `${comp}-F`;
+    const fur = userResults[fId];
+    const fbs = bracketState[fId];
+    if (fur && fbs) {
+      if (fur.g1 !== undefined && fur.g2 !== undefined) {
+        if (TRACKED.includes(fbs.club1.country)) confirmed[fbs.club1.country] += matchPts(fur.g1, fur.g2);
+        if (TRACKED.includes(fbs.club2.country)) confirmed[fbs.club2.country] += matchPts(fur.g2, fur.g1);
+      }
+    }
+  }
+  return confirmed;
+}
+
+function updateStandings(res) {
+  const confirmed = calcConfirmedPoints();
+  const tbody = document.getElementById('standings-body');
+  
+  // Sort by median projected coefficient
+  const rows = TRACKED.map(c => {
+    const currentCoeff = CURRENT_PTS[c] / NUM_CLUBS[c];
+    const confirmedCoeff = confirmed[c] / NUM_CLUBS[c];
+    const pct = res.percentiles[c];
+    return {
+      country: c,
+      currentCoeff,
+      confirmedPts: confirmed[c],
+      confirmedCoeff,
+      median: pct.p50,
+      p5: pct.p5, p25: pct.p25, p75: pct.p75, p95: pct.p95,
+      min: res.minObs[c], max: res.maxObs[c],
+      mean: res.mean[c],
+      top2: res.top2[c]
+    };
+  }).sort((a, b) => b.median - a.median);
+
+  // Find global range for bar normalization
+  const globalMin = Math.min(...rows.map(r => r.p5));
+  const globalMax = Math.max(...rows.map(r => r.p95));
+  const range = globalMax - globalMin || 1;
+
+  let html = '';
+  rows.forEach((r, i) => {
+    const clr = COUNTRY_CLR[r.country];
+    const isTop2 = i < 2 ? 'top2-row' : '';
+    const rankClass = i < 2 ? 'rank-cell top' : 'rank-cell';
+    
+    // Range bar positions (as % of full range)
+    const p5Left = ((r.p5 - globalMin) / range * 100);
+    const p95Right = ((r.p95 - globalMin) / range * 100);
+    const p25Left = ((r.p25 - globalMin) / range * 100);
+    const p75Right = ((r.p75 - globalMin) / range * 100);
+    const medianPos = ((r.median - globalMin) / range * 100);
+    
+    const confirmedStr = r.confirmedPts > 0 
+      ? `<span style="color:var(--green)">+${(r.confirmedCoeff).toFixed(3)}</span>`
+      : `<span style="color:var(--text-muted)">—</span>`;
+
+    html += `
+      <tr class="${isTop2}">
+        <td class="${rankClass}">${i + 1}</td>
+        <td>
+          <div class="nation-cell">
+            <img src="${getFlag(r.country)}" alt="${r.country}">
+            <div>
+              <div class="name">${r.country}</div>
+              <div class="clubs">${NUM_CLUBS[r.country]} clubs · ${CURRENT_PTS[r.country].toFixed(1)} pts</div>
+            </div>
+          </div>
+        </td>
+        <td class="num coeff-current">${r.currentCoeff.toFixed(3)}</td>
+        <td class="num">${confirmedStr}</td>
+        <td class="num" style="color:${clr};font-weight:700">${r.median.toFixed(3)}</td>
+        <td>
+          <div class="range-cell">
+            <span class="range-label">${r.p5.toFixed(1)}</span>
+            <div class="range-bar-wrap">
+              <div class="range-bar" style="left:${p5Left}%;width:${p95Right - p5Left}%;background:${clr}"></div>
+              <div class="range-iqr" style="left:${p25Left}%;width:${p75Right - p25Left}%;background:${clr}"></div>
+              <div class="range-median" style="left:${medianPos}%;background:${clr}"></div>
+            </div>
+            <span class="range-label">${r.p95.toFixed(1)}</span>
+          </div>
+        </td>
+        <td class="num top2-pct" style="color:${r.top2 > 50 ? 'var(--green)' : r.top2 > 10 ? 'var(--yellow)' : 'var(--red)'}">${r.top2.toFixed(1)}%</td>
+      </tr>`;
+  });
+  tbody.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════
 // CHARTS
 // ══════════════════════════════════════════════════════════════
 let distChart = null;
@@ -1126,6 +1408,7 @@ function triggerMC(iterations) {
       updateDashboard(result);
       updateDistChart(result);
       updateOvertakeTable(result);
+      updateStandings(result);
       const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
       btn.disabled = false;
       btn.innerHTML = 'Run 100K Simulations';
@@ -1144,6 +1427,7 @@ function triggerMC(iterations) {
     updateDashboard(result);
     updateDistChart(result);
     updateOvertakeTable(result);
+    updateStandings(result);
     const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
     btn.disabled = false;
     btn.innerHTML = 'Run 100K Simulations';

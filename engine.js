@@ -135,12 +135,16 @@ function runMonteCarlo(userResults = {}, iterations = 100000) {
   let engOutOfTop2 = 0;
   const overtakeBy = {};
   const pairOvertake = {};
+  const coeffAll = {};  // collect all coefficients for percentile calculation
+  const addPtsAll = {}; // collect all addPts for deterministic breakdown
   
   TRACKED.forEach(c => {
     top2Count[c] = 0; top1Count[c] = 0;
     coeffSums[c] = 0; coeffSqSums[c] = 0;
     coeffMin[c] = Infinity; coeffMax[c] = -Infinity;
     if (c !== 'England') overtakeBy[c] = 0;
+    coeffAll[c] = new Float32Array(iterations);
+    addPtsAll[c] = new Float32Array(iterations);
   });
   
   // Histogram bins
@@ -299,6 +303,8 @@ function runMonteCarlo(userResults = {}, iterations = 100000) {
       if (coeff > coeffMax[c]) coeffMax[c] = coeff;
       const bi = Math.floor((coeff - binsMin) / binWidth);
       if (bi >= 0 && bi < nBins) histograms[c][bi]++;
+      coeffAll[c][iter] = coeff;
+      addPtsAll[c][iter] = addPts[c] || 0;
     });
     
     const ranked = TRACKED.map(c => [c, coefficients[c]]).sort((a,b) => b[1]-a[1]);
@@ -327,11 +333,21 @@ function runMonteCarlo(userResults = {}, iterations = 100000) {
     }
   }
   
+  // Percentile helper
+  function percentile(sortedArr, p) {
+    const idx = (p / 100) * (sortedArr.length - 1);
+    const lo = Math.floor(idx), hi = Math.ceil(idx);
+    if (lo === hi) return sortedArr[lo];
+    return sortedArr[lo] + (sortedArr[hi] - sortedArr[lo]) * (idx - lo);
+  }
+
   // Compile
   const n = iterations;
   const result = {
     iterations: n,
     top2: {}, top1: {}, mean: {}, std: {}, minObs: {}, maxObs: {}, dist: {},
+    percentiles: {},  // {country: {p5, p25, p50, p75, p95}}
+    addPtsStats: {},  // {country: {mean, min, max, p50}} — additional points from remaining matches
     england: {
       staysTop2: Math.round((n - engOutOfTop2) / n * 10000) / 100,
       dropsOut: Math.round(engOutOfTop2 / n * 10000) / 100,
@@ -363,6 +379,24 @@ function runMonteCarlo(userResults = {}, iterations = 100000) {
     if (c !== 'England') {
       result.england.overtake[c] = Math.round(overtakeBy[c] / n * 10000) / 100;
     }
+    // Percentiles for coefficient
+    const sorted = Array.from(coeffAll[c]).sort((a, b) => a - b);
+    result.percentiles[c] = {
+      p5:  Math.round(percentile(sorted, 5)  * 1000) / 1000,
+      p25: Math.round(percentile(sorted, 25) * 1000) / 1000,
+      p50: Math.round(percentile(sorted, 50) * 1000) / 1000,
+      p75: Math.round(percentile(sorted, 75) * 1000) / 1000,
+      p95: Math.round(percentile(sorted, 95) * 1000) / 1000,
+    };
+    // Additional points stats
+    const sortedPts = Array.from(addPtsAll[c]).sort((a, b) => a - b);
+    const ptsMean = sortedPts.reduce((s, v) => s + v, 0) / n;
+    result.addPtsStats[c] = {
+      mean: Math.round(ptsMean * 1000) / 1000,
+      min:  Math.round(sortedPts[0] * 1000) / 1000,
+      max:  Math.round(sortedPts[n - 1] * 1000) / 1000,
+      p50:  Math.round(percentile(sortedPts, 50) * 1000) / 1000,
+    };
   });
   
   Object.entries(pairOvertake).forEach(([pair, count]) => {
