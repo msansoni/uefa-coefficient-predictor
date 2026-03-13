@@ -1,0 +1,27 @@
+{
+  "name": "uefa-coefficient-predictor",
+  "version": "1.0.0",
+  "description": "UEFA Coefficient Bracket Predictor — Interactive Monte Carlo Simulation",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "pm2:start": "pm2 start ecosystem.config.cjs",
+    "pm2:stop": "pm2 stop uefa-predictor",
+    "pm2:restart": "pm2 restart uefa-predictor",
+    "pm2:logs": "pm2 logs uefa-predictor"
+  },
+  "keywords": ["uefa", "coefficient", "predictor", "monte-carlo"],
+  "author": "Mike Sansoni",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.0",
+    "compression": "^1.7.4",
+    "helmet": "^8.0.0",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
