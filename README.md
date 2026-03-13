@@ -1,50 +1,44 @@
-# UEFA European Performance Spot Coefficient Predictor
+# UEFA Coefficient Bracket Predictor
 
-Monte Carlo simulation engine and interactive dashboard predicting which nations will earn UEFA's extra Champions League spots for 2026/27.
+Interactive Monte Carlo simulation for predicting which nations earn UEFA's extra Champions League spots for 2026/27.
 
 ## What This Does
 
-The **UEFA European Performance Spot** awards the top 2 nations by single-season association coefficient an extra Champions League place. This tool simulates all remaining knockout matches across CL, EL, and Conference League (1 million iterations) to calculate each country's probability of finishing in the top 2.
+The **UEFA European Performance Spot** awards the top 2 nations by single-season association coefficient an extra Champions League place. This tool lets you enter match results across CL, EL, and Conference League knockout rounds and instantly see how each result shifts the coefficient probabilities.
 
-## Key Features
+## Features
 
-- **Monte Carlo Engine** (`coefficient_engine.py`): 1M iteration simulation with Poisson goal modeling, aggregate scoring, and correct UEFA pre-drawn bracket routing
-- **Worst-Case Scenario**: Separate 500K simulation where all English clubs are knocked out at R16
-- **Interactive Dashboard**: 6-tab visualization with clickable simulation traces showing full bracket outcomes
-- **Back-tested**: Validated against 3 previous seasons (2022/23, 2023/24, 2024/25) — all pass
+- **Interactive Bracket**: Enter second-leg scores for R16, QF, SF, and Final matches across all 3 competitions
+- **Live Probability Updates**: 50K Monte Carlo simulations run in-browser on every result change
+- **Club Badges & Flags**: Visual team identification with UEFA badges and nationality flags
+- **Aggregate Scoring**: Correct two-legged tie resolution with penalty shootout handling
+- **Pre-drawn Bracket Routing**: Follows the actual UEFA QF/SF draw paths
+- **Coefficient Distribution Chart**: Live-updating probability distributions for all 5 nations
+- **Overtake Probabilities**: Real-time tracking of which nations could overtake England
 
-## Current Results (as of 12 March 2026)
+## Current Data (as of 12 March 2026)
 
-| Country | Current Coeff | Top-2 Probability | Mean Simulated |
-|---------|:---:|:---:|:---:|
-| England | 22.847 | 99.99% | 25.629 |
-| Spain | 18.406 | 71.65% | 21.899 |
-| Germany | 18.143 | 26.37% | 20.812 |
-| Italy | 17.929 | 1.47% | 19.577 |
-| France | 15.679 | 0.52% | 18.079 |
-
-**Worst-case scenario** (all English clubs eliminated at R16): England still stays top-2 in **97.22%** of simulations.
+| Country | Current Coeff | Top-2 Probability |
+|---------|:---:|:---:|
+| England | 22.847 | ~100% |
+| Spain | 18.406 | ~72% |
+| Germany | 18.143 | ~26% |
+| Italy | 17.929 | ~1.5% |
+| France | 15.679 | ~0.5% |
 
 ## Live Dashboard
 
-🔗 [View the interactive dashboard](https://msansoni.github.io/uefa-coefficient-predictor/)
+🔗 [View the interactive predictor](https://msansoni.github.io/uefa-coefficient-predictor/)
 
-## How to Run the Engine
+## Technical Details
 
-```bash
-python3 coefficient_engine.py
-```
-
-Generates `results.json` with full simulation data.
-
-## Data Sources
-
-- UEFA official coefficient data as of 12 March 2026
-- R16 first leg scores from actual matches played 11-13 March 2026
-- UEFA pre-drawn QF/SF bracket pairings
+- **Engine**: JavaScript Monte Carlo simulation running entirely in-browser
+- **Match Model**: Poisson distribution for goal scoring (λ=1.3-1.4 home, λ=1.1 away)
+- **Simulations**: 50K iterations per update, 100K available via manual trigger
+- **No backend required**: Pure client-side computation
 
 ## Built with
 
-- Python (Monte Carlo engine)
+- JavaScript (Monte Carlo engine)
 - Chart.js (data visualization)
 - Created with [Perplexity Computer](https://www.perplexity.ai/computer)
