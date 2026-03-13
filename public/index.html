@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+   ______                            __
+  / ____/___  ____ ___  ____  __  __/ /____  _____
+ / /   / __ \/ __ `__ \/ __ \/ / / / __/ _ \/ ___/
+/ /___/ /_/ / / / / / / /_/ / /_/ / /_/  __/ /
+\____/\____/_/ /_/ /_/ .___/\__,_/\__/\___/_/
+                    /_/
+        Created with Perplexity Computer
+        https://www.perplexity.ai/computer
+-->
+<meta name="generator" content="Perplexity Computer">
+<meta name="author" content="Perplexity Computer">
+<meta property="og:see_also" content="https://www.perplexity.ai/computer">
+<link rel="author" href="https://www.perplexity.ai/computer">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UEFA Coefficient Bracket Predictor 2025/26</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0a0e1a;
+  --card: #111827;
+  --card-alt: #0d1321;
+  --border: #1e293b;
+  --border-light: #2d3a4f;
+  --text: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --green: #22c55e;
+  --green-bg: rgba(34,197,94,0.12);
+  --red: #ef4444;
+  --red-bg: rgba(239,68,68,0.1);
+  --yellow: #eab308;
+  --eng: #e74c3c;
+  --esp: #f39c12;
+  --ger: #2ecc71;
+  --ita: #3498db;
+  --fra: #9b59b6;
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+html { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+body { background: var(--bg); min-height: 100vh; }
+a { color: var(--text-secondary); text-decoration: none; }
+a:hover { color: var(--text); }
+
+/* ── Header ─────────────────────────────────────── */
+.header {
+  text-align: center;
+  padding: 32px 20px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.header h1 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--eng), var(--esp), var(--ger), var(--ita), var(--fra));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.header p { color: var(--text-secondary); font-size: 0.82rem; margin-top: 4px; }
+
+/* ── Probability Dashboard ──────────────────────── */
+.dashboard {
+  display: flex;
+  gap: 12px;
+  padding: 20px;
+  overflow-x: auto;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.kpi-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  min-width: 160px;
+  flex: 0 0 auto;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+.kpi-card:hover { border-color: var(--border-light); }
+.kpi-card .accent-bar {
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.kpi-card .country-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+}
+.kpi-card .country-header img { width: 22px; height: 16px; border-radius: 2px; }
+.kpi-card .country-header span { font-weight: 600; font-size: 0.85rem; }
+.kpi-card .coeff-val {
+  font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 2px;
+}
+.kpi-card .prob-val {
+  font-size: 1.8rem; font-weight: 800; font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.kpi-card .prob-label {
+  font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;
+}
+.kpi-card .prob-bar {
+  height: 4px; border-radius: 2px; background: var(--border); margin-top: 8px;
+  overflow: hidden;
+}
+.kpi-card .prob-bar-fill {
+  height: 100%; border-radius: 2px; transition: width 0.6s ease;
+}
+
+/* ── England Callout ────────────────────────────── */
+.callout {
+  text-align: center; padding: 12px 20px;
+  background: linear-gradient(135deg, rgba(231,76,60,0.08), rgba(231,76,60,0.02));
+  border-top: 1px solid rgba(231,76,60,0.15);
+  border-bottom: 1px solid rgba(231,76,60,0.15);
+}
+.callout .callout-label { font-size: 0.8rem; color: var(--text-secondary); }
+.callout .callout-value {
+  font-size: 2rem; font-weight: 800; color: var(--eng);
+  font-variant-numeric: tabular-nums;
+}
+.callout .callout-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+
+/* ── Tabs ───────────────────────────────────────── */
+.comp-tabs {
+  display: flex; justify-content: center; gap: 4px;
+  padding: 16px 20px 0;
+}
+.comp-tab {
+  padding: 8px 20px; border-radius: 6px 6px 0 0;
+  font-size: 0.82rem; font-weight: 600;
+  cursor: pointer; border: 1px solid var(--border);
+  border-bottom: none; background: var(--card-alt);
+  color: var(--text-secondary); transition: all 0.2s;
+}
+.comp-tab.active {
+  background: var(--card); color: var(--text);
+  border-color: var(--border-light);
+}
+.comp-tab:hover:not(.active) { color: var(--text); }
+
+/* ── Bracket Container ──────────────────────────── */
+.bracket-wrap {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  margin: 0 20px 20px;
+  padding: 20px;
+  overflow-x: auto;
+}
+.bracket-container { display: none; }
+.bracket-container.active { display: block; }
+
+/* ── Round Section ──────────────────────────────── */
+.round-section { margin-bottom: 24px; }
+.round-title {
+  font-size: 0.82rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-muted);
+  margin-bottom: 12px; padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.ties-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 10px;
+}
+
+/* ── Tie Card ───────────────────────────────────── */
+.tie-card {
+  background: var(--card-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  transition: border-color 0.3s;
+}
+.tie-card:hover { border-color: var(--border-light); }
+.tie-card.decided { border-color: rgba(34,197,94,0.3); }
+
+.tie-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.tie-label {
+  font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--text-muted);
+}
+.tie-agg {
+  font-size: 0.65rem; font-weight: 600; color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.club-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; border-radius: 6px;
+  margin-bottom: 4px; transition: background 0.3s;
+}
+.club-row.winner { background: var(--green-bg); }
+.club-row.loser { background: var(--red-bg); opacity: 0.6; }
+.club-row.loser .club-name { text-decoration: line-through; }
+
+.club-badge {
+  width: 28px; height: 28px; border-radius: 4px;
+  object-fit: contain; flex-shrink: 0;
+}
+.badge-fallback {
+  width: 28px; height: 28px; border-radius: 4px;
+  display: none; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.7rem; color: #fff; flex-shrink: 0;
+}
+.club-flag { width: 18px; height: 13px; border-radius: 2px; flex-shrink: 0; }
+.club-name {
+  font-size: 0.78rem; font-weight: 600; flex: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.winner-icon {
+  display: none; font-size: 0.75rem; color: var(--green); flex-shrink: 0;
+}
+.club-row.winner .winner-icon { display: block; }
+
+.scores-area {
+  display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.score-fixed {
+  font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);
+  min-width: 24px; text-align: center;
+}
+.score-input {
+  width: 36px; height: 28px; border-radius: 4px;
+  border: 1px solid var(--border); background: var(--bg);
+  color: var(--text); font-size: 0.78rem; font-weight: 600;
+  text-align: center; font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  transition: border-color 0.2s;
+  -moz-appearance: textfield;
+}
+.score-input::-webkit-inner-spin-button,
+.score-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.score-input:focus { outline: none; border-color: #4f8fff; }
+.score-sep { color: var(--text-muted); font-size: 0.7rem; font-weight: 600; }
+
+/* ── Penalties button ───────────────────────────── */
+.pen-area { text-align: center; margin-top: 4px; }
+.pen-btn {
+  font-size: 0.65rem; font-weight: 600; padding: 3px 10px;
+  border-radius: 4px; border: 1px solid var(--yellow);
+  color: var(--yellow); background: transparent;
+  cursor: pointer; font-family: inherit; transition: all 0.2s;
+}
+.pen-btn:hover { background: rgba(234,179,8,0.15); }
+.pen-btn.selected { background: rgba(234,179,8,0.2); border-color: var(--green); color: var(--green); }
+
+/* ── TBD ────────────────────────────────────────── */
+.tbd-placeholder {
+  display: flex; align-items: center; justify-content: center;
+  height: 36px; color: var(--text-muted); font-size: 0.75rem;
+  font-style: italic;
+}
+
+/* ── Standings Table ────────────────────────────── */
+.standings-section {
+  padding: 0 20px 20px;
+}
+.standings-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.standings-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+}
+.standings-header h3 {
+  font-size: 0.85rem; font-weight: 700; color: var(--text);
+}
+.standings-header .legend {
+  display: flex; gap: 14px; font-size: 0.65rem; color: var(--text-muted);
+}
+.standings-header .legend span {
+  display: flex; align-items: center; gap: 4px;
+}
+.standings-header .legend .dot {
+  width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+}
+.standings-table {
+  width: 100%; border-collapse: collapse; font-size: 0.78rem;
+}
+.standings-table thead th {
+  text-align: left; font-weight: 600; color: var(--text-muted);
+  padding: 8px 10px; border-bottom: 1px solid var(--border);
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.standings-table thead th.num { text-align: right; }
+.standings-table tbody td {
+  padding: 10px 10px; border-bottom: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+  vertical-align: middle;
+}
+.standings-table tbody td.num { text-align: right; font-weight: 600; }
+.standings-table tbody tr { transition: background 0.2s; }
+.standings-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+.standings-table tbody tr.top2-row { background: rgba(34,197,94,0.05); }
+.standings-table tbody tr.top2-row:hover { background: rgba(34,197,94,0.1); }
+.standings-table .rank-cell {
+  font-weight: 800; font-size: 0.85rem; color: var(--text-muted);
+  width: 30px; text-align: center;
+}
+.standings-table .rank-cell.top { color: var(--green); }
+.standings-table .nation-cell {
+  display: flex; align-items: center; gap: 8px;
+}
+.standings-table .nation-cell img {
+  width: 22px; height: 16px; border-radius: 2px;
+}
+.standings-table .nation-cell .name { font-weight: 600; }
+.standings-table .nation-cell .clubs { font-size: 0.68rem; color: var(--text-muted); }
+.standings-table .coeff-current { color: var(--text-secondary); }
+.standings-table .coeff-confirmed { color: var(--green); font-weight: 700; }
+.standings-table .range-cell {
+  display: flex; align-items: center; gap: 0; height: 28px; position: relative;
+}
+.range-bar-wrap {
+  flex: 1; height: 18px; position: relative; border-radius: 3px;
+  background: rgba(255,255,255,0.04); overflow: visible;
+}
+.range-bar {
+  position: absolute; height: 100%; border-radius: 3px; opacity: 0.3;
+  transition: left 0.4s, width 0.4s;
+}
+.range-iqr {
+  position: absolute; height: 100%; border-radius: 3px; opacity: 0.6;
+  transition: left 0.4s, width 0.4s;
+}
+.range-median {
+  position: absolute; top: -2px; bottom: -2px; width: 2px;
+  border-radius: 1px; transition: left 0.4s;
+}
+.range-label {
+  font-size: 0.65rem; color: var(--text-muted); white-space: nowrap;
+  min-width: 36px; text-align: center;
+}
+.standings-table .top2-pct {
+  font-weight: 800; font-size: 0.9rem;
+}
+
+/* ── Bottom Charts ──────────────────────────────── */
+.charts-section {
+  padding: 20px;
+}
+.charts-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.chart-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+}
+.chart-card h3 {
+  font-size: 0.82rem; font-weight: 700; margin-bottom: 12px;
+  color: var(--text-secondary);
+}
+.chart-canvas-wrap { position: relative; width: 100%; height: 280px; }
+.chart-canvas-wrap canvas { width: 100% !important; height: 100% !important; }
+
+/* ── Overtake Table ─────────────────────────────── */
+.overtake-table {
+  width: 100%; border-collapse: collapse; font-size: 0.75rem;
+}
+.overtake-table th {
+  text-align: left; font-weight: 600; color: var(--text-muted);
+  padding: 6px 8px; border-bottom: 1px solid var(--border);
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+}
+.overtake-table td {
+  padding: 6px 8px; border-bottom: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Run Button ─────────────────────────────────── */
+.run-section { text-align: center; padding: 0 20px 20px; }
+.run-btn {
+  padding: 10px 28px; border-radius: 8px;
+  background: linear-gradient(135deg, #4f8fff, #6366f1);
+  color: #fff; font-weight: 700; font-size: 0.85rem;
+  border: none; cursor: pointer; font-family: inherit;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.run-btn:hover { opacity: 0.9; }
+.run-btn:active { transform: scale(0.98); }
+.run-btn:disabled { opacity: 0.5; cursor: wait; }
+.sim-status {
+  font-size: 0.72rem; color: var(--text-muted); margin-top: 6px;
+}
+
+/* ── Spinner ────────────────────────────────────── */
+.spinner {
+  display: inline-block; width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff; border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle; margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Footer ─────────────────────────────────────── */
+footer {
+  text-align: center; padding: 20px;
+  border-top: 1px solid var(--border);
+  font-size: 0.72rem; color: var(--text-muted);
+}
+
+/* ── Mobile ─────────────────────────────────────── */
+@media (max-width: 800px) {
+  .dashboard { flex-direction: column; align-items: stretch; }
+  .kpi-card { min-width: unset; }
+  .charts-grid { grid-template-columns: 1fr; }
+  .ties-grid { grid-template-columns: 1fr; }
+  .bracket-wrap { margin: 0 8px 16px; padding: 12px; }
+  .comp-tabs { padding: 12px 8px 0; }
+  .header h1 { font-size: 1.2rem; }
+  .callout .callout-value { font-size: 1.5rem; }
+  .standings-section { padding: 0 8px 16px; }
+  .standings-card { overflow-x: auto; }
+  .standings-table { min-width: 700px; }
+  .standings-header { flex-direction: column; gap: 8px; align-items: flex-start; }
+  .standings-header .legend { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>UEFA Coefficient Bracket Predictor</h1>
+  <p>2025/26 Season — Interactive Monte Carlo Simulation</p>
+</div>
+
+<!-- Probability Dashboard -->
+<div class="dashboard" id="dashboard"></div>
+
+<div class="callout" id="callout">
+  <div class="callout-label">England stays in top 2</div>
+  <div class="callout-value" id="eng-top2">—</div>
+  <div class="callout-sub" id="eng-sub">Loading simulations…</div>
+</div>
+
+<!-- Coefficient Standings -->
+<div class="standings-section">
+  <div class="standings-card">
+    <div class="standings-header">
+      <h3>Coefficient Standings</h3>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--text-secondary)"></span> Current</span>
+        <span><span class="dot" style="background:var(--green)"></span> Confirmed</span>
+        <span><span class="dot" style="background:#4f8fff;opacity:0.6"></span> Projected Range (MC)</span>
+      </div>
+    </div>
+    <table class="standings-table">
+      <thead>
+        <tr>
+          <th style="width:30px">#</th>
+          <th>Nation</th>
+          <th class="num">Current</th>
+          <th class="num">+Confirmed</th>
+          <th class="num">Projected Coeff</th>
+          <th style="min-width:180px">Simulation Range</th>
+          <th class="num">Top 2</th>
+        </tr>
+      </thead>
+      <tbody id="standings-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Competition Tabs -->
+<div class="comp-tabs">
+  <div class="comp-tab active" data-comp="CL">Champions League</div>
+  <div class="comp-tab" data-comp="EL">Europa League</div>
+  <div class="comp-tab" data-comp="ECL">Conference League</div>
+</div>
+
+<!-- Brackets -->
+<div class="bracket-wrap">
+  <div class="bracket-container active" id="bracket-CL"></div>
+  <div class="bracket-container" id="bracket-EL"></div>
+  <div class="bracket-container" id="bracket-ECL"></div>
+</div>
+
+<!-- Run MC -->
+<div class="run-section">
+  <button class="run-btn" id="run-btn" onclick="triggerMC(100000)">Run 100K Simulations</button>
+  <div class="sim-status" id="sim-status"></div>
+</div>
+
+<!-- Charts -->
+<div class="charts-section">
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h3>Coefficient Distribution</h3>
+      <div class="chart-canvas-wrap"><canvas id="distChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Overtake Probabilities</h3>
+      <div id="overtake-wrap" style="overflow-x:auto;"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">Created with Perplexity Computer</a>
+</footer>
+
+<script src="clubs.js"></script>
+<script src="engine.js"></script>
+<script>
+// ══════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════
+const userResults = {};
+let mcResult = null;
+let mcWorker = null;
+let debounceTimer = null;
+
+const COMP_LABELS = { CL: 'Champions League', EL: 'Europa League', ECL: 'Conference League' };
+const COMP_SHORT = { CL: 'CL', EL: 'EL', ECL: 'ECL' };
+const COUNTRY_CLR = { England:'#e74c3c', Spain:'#f39c12', Germany:'#2ecc71', Italy:'#3498db', France:'#9b59b6' };
+
+// ══════════════════════════════════════════════════════════════
+// BUILD DASHBOARD
+// ══════════════════════════════════════════════════════════════
+function buildDashboard() {
+  const dash = document.getElementById('dashboard');
+  TRACKED.forEach(c => {
+    const clr = COUNTRY_CLR[c];
+    dash.innerHTML += `
+      <div class="kpi-card" id="kpi-${c}">
+        <div class="accent-bar" style="background:${clr}"></div>
+        <div class="country-header">
+          <img src="${getFlag(c)}" alt="${c}">
+          <span>${c}</span>
+        </div>
+        <div class="coeff-val" id="coeff-${c}">Coeff: —</div>
+        <div class="prob-val" style="color:${clr}" id="prob-${c}">—</div>
+        <div class="prob-label">Top-2 probability</div>
+        <div class="prob-bar"><div class="prob-bar-fill" id="bar-${c}" style="background:${clr};width:0%"></div></div>
+      </div>`;
+  });
+}
+
+function updateDashboard(res) {
+  TRACKED.forEach(c => {
+    document.getElementById(`coeff-${c}`).textContent = `Coeff: ${res.mean[c].toFixed(3)}`;
+    document.getElementById(`prob-${c}`).textContent = res.top2[c].toFixed(1) + '%';
+    document.getElementById(`bar-${c}`).style.width = res.top2[c] + '%';
+  });
+  document.getElementById('eng-top2').textContent = res.england.staysTop2.toFixed(2) + '%';
+  const risk = res.england.dropsOut;
+  document.getElementById('eng-sub').textContent =
+    risk < 1 ? 'Very safe — risk of dropping: ' + risk.toFixed(2) + '%' :
+    risk < 10 ? 'Moderate risk of dropping: ' + risk.toFixed(2) + '%' :
+    'High risk! Chance of dropping: ' + risk.toFixed(2) + '%';
+}
+
+// ══════════════════════════════════════════════════════════════
+// BUILD BRACKET
+// ══════════════════════════════════════════════════════════════
+function clubHTML(name, country, side) {
+  if (!name) {
+    return `<div class="tbd-placeholder">TBD</div>`;
+  }
+  const meta = CLUB_META[name] || {};
+  const clr = meta.color || '#555';
+  const short = (meta.short || name.substring(0,3)).charAt(0);
+  return `
+    <div class="club-row" data-side="${side}" id="">
+      <img class="club-badge" src="${getBadge(name)}" alt="${name}"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+      <div class="badge-fallback" style="background:${clr}">${short}</div>
+      <img class="club-flag" src="${getFlag(country)}" alt="${country}">
+      <span class="club-name">${name}</span>
+      <span class="winner-icon">✓</span>
+    </div>`;
+}
+
+function buildR16(comp) {
+  const ties = R16_TIES[comp];
+  let html = `<div class="round-section"><div class="round-title">Round of 16</div><div class="ties-grid">`;
+  ties.forEach((tie, i) => {
+    html += `
+      <div class="tie-card" id="card-${tie.id}">
+        <div class="tie-header">
+          <span class="tie-label">${COMP_SHORT[comp]} R16 #${i+1}</span>
+          <span class="tie-agg" id="agg-${tie.id}"></span>
+        </div>
+        <div id="rows-${tie.id}">
+          <div class="club-row" data-side="home" id="row-${tie.id}-home">
+            <img class="club-badge" src="${getBadge(tie.home)}" alt="${tie.home}"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+            <div class="badge-fallback" style="background:${(CLUB_META[tie.home]||{}).color||'#555'}">${(CLUB_META[tie.home]||{short:'?'}).short.charAt(0)}</div>
+            <img class="club-flag" src="${getFlag(tie.hc)}" alt="${tie.hc}">
+            <span class="club-name">${tie.home}</span>
+            <span class="winner-icon">✓</span>
+            <div class="scores-area">
+              <span class="score-fixed">${tie.fl_hg}</span>
+              <span class="score-sep">|</span>
+              <input class="score-input" type="number" min="0" max="20" data-tie="${tie.id}" data-field="sl_ag" placeholder="–" title="Away goals (2nd leg)">
+            </div>
+          </div>
+          <div class="club-row" data-side="away" id="row-${tie.id}-away">
+            <img class="club-badge" src="${getBadge(tie.away)}" alt="${tie.away}"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+            <div class="badge-fallback" style="background:${(CLUB_META[tie.away]||{}).color||'#555'}">${(CLUB_META[tie.away]||{short:'?'}).short.charAt(0)}</div>
+            <img class="club-flag" src="${getFlag(tie.ac)}" alt="${tie.ac}">
+            <span class="club-name">${tie.away}</span>
+            <span class="winner-icon">✓</span>
+            <div class="scores-area">
+              <span class="score-fixed">${tie.fl_ag}</span>
+              <span class="score-sep">|</span>
+              <input class="score-input" type="number" min="0" max="20" data-tie="${tie.id}" data-field="sl_hg" placeholder="–" title="Home goals (2nd leg)">
+            </div>
+          </div>
+        </div>
+        <div class="pen-area" id="pen-${tie.id}" style="display:none">
+          <button class="pen-btn" data-tie="${tie.id}" data-pick="home" onclick="pickPenalty(this)">🏆 ${tie.home} wins pens</button>
+          <button class="pen-btn" data-tie="${tie.id}" data-pick="away" onclick="pickPenalty(this)">🏆 ${tie.away} wins pens</button>
+        </div>
+      </div>`;
+  });
+  html += `</div></div>`;
+  return html;
+}
+
+function buildTwoLegRound(comp, round, count, label) {
+  let html = `<div class="round-section"><div class="round-title">${label}</div><div class="ties-grid">`;
+  for (let i = 0; i < count; i++) {
+    const id = `${comp}-${round}-${i}`;
+    html += `
+      <div class="tie-card" id="card-${id}">
+        <div class="tie-header">
+          <span class="tie-label">${COMP_SHORT[comp]} ${round} #${i+1}</span>
+          <span class="tie-agg" id="agg-${id}"></span>
+        </div>
+        <div id="rows-${id}">
+          <div class="tbd-placeholder" id="tbd1-${id}">Waiting for results…</div>
+          <div class="tbd-placeholder" id="tbd2-${id}" style="display:none"></div>
+        </div>
+        <div id="inputs-${id}" style="display:none">
+          <div class="club-row" data-side="club1" id="row-${id}-club1"></div>
+          <div class="club-row" data-side="club2" id="row-${id}-club2"></div>
+        </div>
+        <div class="pen-area" id="pen-${id}" style="display:none">
+          <button class="pen-btn" data-tie="${id}" data-pick="club1" onclick="pickPenalty(this)">🏆 TBD wins pens</button>
+          <button class="pen-btn" data-tie="${id}" data-pick="club2" onclick="pickPenalty(this)">🏆 TBD wins pens</button>
+        </div>
+      </div>`;
+  }
+  html += `</div></div>`;
+  return html;
+}
+
+function buildFinalRound(comp) {
+  const id = `${comp}-F`;
+  return `
+    <div class="round-section">
+      <div class="round-title">Final</div>
+      <div class="ties-grid">
+        <div class="tie-card" id="card-${id}">
+          <div class="tie-header">
+            <span class="tie-label">${COMP_SHORT[comp]} Final</span>
+            <span class="tie-agg" id="agg-${id}"></span>
+          </div>
+          <div id="rows-${id}">
+            <div class="tbd-placeholder" id="tbd1-${id}">Waiting for semi-final results…</div>
+          </div>
+          <div id="inputs-${id}" style="display:none">
+            <div class="club-row" data-side="club1" id="row-${id}-club1"></div>
+            <div class="club-row" data-side="club2" id="row-${id}-club2"></div>
+          </div>
+          <div class="pen-area" id="pen-${id}" style="display:none">
+            <button class="pen-btn" data-tie="${id}" data-pick="club1" onclick="pickPenalty(this)">🏆 TBD wins pens</button>
+            <button class="pen-btn" data-tie="${id}" data-pick="club2" onclick="pickPenalty(this)">🏆 TBD wins pens</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function buildAllBrackets() {
+  ['CL','EL','ECL'].forEach(comp => {
+    const el = document.getElementById('bracket-' + comp);
+    el.innerHTML =
+      buildR16(comp) +
+      buildTwoLegRound(comp, 'QF', 4, 'Quarter-Finals') +
+      buildTwoLegRound(comp, 'SF', 2, 'Semi-Finals') +
+      buildFinalRound(comp);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// BRACKET STATE TRACKING
+// ══════════════════════════════════════════════════════════════
+const bracketState = {};
+
+function getR16Winner(comp, idx) {
+  const tie = R16_TIES[comp][idx];
+  const ur = userResults[tie.id];
+  if (!ur || ur.sl_hg === undefined || ur.sl_ag === undefined) return null;
+  const homeAgg = tie.fl_hg + ur.sl_ag;
+  const awayAgg = tie.fl_ag + ur.sl_hg;
+  if (homeAgg > awayAgg) return { club: tie.home, country: tie.hc };
+  if (awayAgg > homeAgg) return { club: tie.away, country: tie.ac };
+  // Tied — need penalty pick
+  if (ur.penWinner === 'home') return { club: tie.home, country: tie.hc };
+  if (ur.penWinner === 'away') return { club: tie.away, country: tie.ac };
+  return null; // no penalty decision yet
+}
+
+function getQFParticipants(comp, qfIdx) {
+  const [a, b] = QF_BRACKET[qfIdx];
+  return { club1: getR16Winner(comp, a), club2: getR16Winner(comp, b) };
+}
+
+function getTwoLegWinner(id, c1, c2) {
+  const ur = userResults[id];
+  if (!ur || ur.fl_hg === undefined || ur.fl_ag === undefined ||
+      ur.sl_hg === undefined || ur.sl_ag === undefined) return null;
+  const c1Agg = ur.fl_hg + ur.sl_ag;
+  const c2Agg = ur.fl_ag + ur.sl_hg;
+  if (c1Agg > c2Agg) return c1;
+  if (c2Agg > c1Agg) return c2;
+  if (ur.penWinner === 'club1') return c1;
+  if (ur.penWinner === 'club2') return c2;
+  return null;
+}
+
+function getFinalWinner(id, c1, c2) {
+  const ur = userResults[id];
+  if (!ur || ur.g1 === undefined || ur.g2 === undefined) return null;
+  if (ur.g1 > ur.g2) return c1;
+  if (ur.g2 > ur.g1) return c2;
+  if (ur.penWinner === 'club1') return c1;
+  if (ur.penWinner === 'club2') return c2;
+  return null;
+}
+
+// ══════════════════════════════════════════════════════════════
+// POPULATE LATER ROUNDS
+// ══════════════════════════════════════════════════════════════
+function makeClubRow(club, side, tieId, isLeg1, isLeg2, isFinal) {
+  const meta = CLUB_META[club.club] || {};
+  const clr = meta.color || '#555';
+  const short = (meta.short || club.club.substring(0,3)).charAt(0);
+  let scoresHTML = '';
+  if (isFinal) {
+    scoresHTML = `
+      <div class="scores-area">
+        <input class="score-input" type="number" min="0" max="20" data-tie="${tieId}" data-field="g${side === 'club1' ? '1' : '2'}" placeholder="–">
+      </div>`;
+  } else {
+    const f1field = side === 'club1' ? 'fl_hg' : 'fl_ag';
+    const f2field = side === 'club1' ? 'sl_ag' : 'sl_hg';
+    scoresHTML = `
+      <div class="scores-area">
+        <input class="score-input" type="number" min="0" max="20" data-tie="${tieId}" data-field="${f1field}" placeholder="L1" title="Leg 1">
+        <span class="score-sep">|</span>
+        <input class="score-input" type="number" min="0" max="20" data-tie="${tieId}" data-field="${f2field}" placeholder="L2" title="Leg 2">
+      </div>`;
+  }
+  return `
+    <img class="club-badge" src="${getBadge(club.club)}" alt="${club.club}"
+         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+    <div class="badge-fallback" style="background:${clr}">${short}</div>
+    <img class="club-flag" src="${getFlag(club.country)}" alt="${club.country}">
+    <span class="club-name">${club.club}</span>
+    <span class="winner-icon">✓</span>
+    ${scoresHTML}`;
+}
+
+function populateQF(comp) {
+  for (let qi = 0; qi < 4; qi++) {
+    const id = `${comp}-QF-${qi}`;
+    const { club1, club2 } = getQFParticipants(comp, qi);
+    const inputsEl = document.getElementById('inputs-' + id);
+    const rowsEl = document.getElementById('rows-' + id);
+    const tbd1 = document.getElementById('tbd1-' + id);
+
+    if (club1 && club2) {
+      tbd1.style.display = 'none';
+      inputsEl.style.display = 'block';
+      const r1 = document.getElementById('row-' + id + '-club1');
+      const r2 = document.getElementById('row-' + id + '-club2');
+      r1.innerHTML = makeClubRow(club1, 'club1', id, true, true, false);
+      r2.innerHTML = makeClubRow(club2, 'club2', id, true, true, false);
+      // restore any saved scores
+      restoreInputs(id);
+      updateWinnerHighlight(id, false);
+    } else {
+      tbd1.style.display = 'flex';
+      inputsEl.style.display = 'none';
+    }
+  }
+}
+
+function populateSF(comp) {
+  for (let si = 0; si < 2; si++) {
+    const id = `${comp}-SF-${si}`;
+    const qf1Id = `${comp}-QF-${SF_BRACKET[si][0]}`;
+    const qf2Id = `${comp}-QF-${SF_BRACKET[si][1]}`;
+    const c1state = bracketState[qf1Id];
+    const c2state = bracketState[qf2Id];
+    const c1 = c1state ? getTwoLegWinner(qf1Id, c1state.club1, c1state.club2) : null;
+    const c2 = c2state ? getTwoLegWinner(qf2Id, c2state.club1, c2state.club2) : null;
+    const inputsEl = document.getElementById('inputs-' + id);
+    const tbd1 = document.getElementById('tbd1-' + id);
+    if (c1 && c2) {
+      tbd1.style.display = 'none';
+      inputsEl.style.display = 'block';
+      const r1 = document.getElementById('row-' + id + '-club1');
+      const r2 = document.getElementById('row-' + id + '-club2');
+      r1.innerHTML = makeClubRow(c1, 'club1', id, true, true, false);
+      r2.innerHTML = makeClubRow(c2, 'club2', id, true, true, false);
+      restoreInputs(id);
+      updateWinnerHighlight(id, false);
+    } else {
+      tbd1.style.display = 'flex';
+      inputsEl.style.display = 'none';
+    }
+  }
+}
+
+function populateFinal(comp) {
+  const id = `${comp}-F`;
+  const sf1Id = `${comp}-SF-0`;
+  const sf2Id = `${comp}-SF-1`;
+  const c1state = bracketState[sf1Id];
+  const c2state = bracketState[sf2Id];
+  const c1 = c1state ? getTwoLegWinner(sf1Id, c1state.club1, c1state.club2) : null;
+  const c2 = c2state ? getTwoLegWinner(sf2Id, c2state.club1, c2state.club2) : null;
+  const inputsEl = document.getElementById('inputs-' + id);
+  const tbd1 = document.getElementById('tbd1-' + id);
+  if (c1 && c2) {
+    tbd1.style.display = 'none';
+    inputsEl.style.display = 'block';
+    const r1 = document.getElementById('row-' + id + '-club1');
+    const r2 = document.getElementById('row-' + id + '-club2');
+    r1.innerHTML = makeClubRow(c1, 'club1', id, false, false, true);
+    r2.innerHTML = makeClubRow(c2, 'club2', id, false, false, true);
+    restoreInputs(id);
+    updateWinnerHighlight(id, true);
+  } else {
+    tbd1.style.display = 'flex';
+    inputsEl.style.display = 'none';
+  }
+}
+
+function restoreInputs(tieId) {
+  const ur = userResults[tieId];
+  if (!ur) return;
+  document.querySelectorAll(`input[data-tie="${tieId}"]`).forEach(inp => {
+    const field = inp.dataset.field;
+    if (ur[field] !== undefined) inp.value = ur[field];
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// WINNER HIGHLIGHT
+// ══════════════════════════════════════════════════════════════
+function updateWinnerHighlight(tieId, isFinal) {
+  const ur = userResults[tieId];
+  const bs = bracketState[tieId];
+  if (!bs) return;
+  const row1 = document.getElementById('row-' + tieId + '-club1');
+  const row2 = document.getElementById('row-' + tieId + '-club2');
+  if (!row1 || !row2) return;
+
+  let winner = null;
+  if (isFinal) {
+    winner = getFinalWinner(tieId, bs.club1, bs.club2);
+  } else {
+    winner = getTwoLegWinner(tieId, bs.club1, bs.club2);
+  }
+
+  row1.classList.remove('winner', 'loser');
+  row2.classList.remove('winner', 'loser');
+  const card = document.getElementById('card-' + tieId);
+  if (card) card.classList.remove('decided');
+
+  if (winner) {
+    if (winner.club === bs.club1.club) {
+      row1.classList.add('winner'); row2.classList.add('loser');
+    } else {
+      row2.classList.add('winner'); row1.classList.add('loser');
+    }
+    if (card) card.classList.add('decided');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// AGG DISPLAY
+// ══════════════════════════════════════════════════════════════
+function updateAgg(tieId, isFinal) {
+  const el = document.getElementById('agg-' + tieId);
+  if (!el) return;
+  const ur = userResults[tieId];
+  if (!ur) { el.textContent = ''; return; }
+  if (isFinal) {
+    if (ur.g1 !== undefined && ur.g2 !== undefined)
+      el.textContent = `${ur.g1} – ${ur.g2}`;
+    else el.textContent = '';
+  } else {
+    const h1 = ur.fl_hg, a1 = ur.fl_ag, h2 = ur.sl_hg, a2 = ur.sl_ag;
+    if (h1 !== undefined && a1 !== undefined && h2 !== undefined && a2 !== undefined) {
+      const aggH = h1 + a2, aggA = a1 + h2;
+      el.textContent = `Agg: ${aggH}–${aggA}`;
+    } else if (h1 !== undefined && a1 !== undefined) {
+      el.textContent = `L1: ${h1}–${a1}`;
+    } else el.textContent = '';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// R16 AGG DISPLAY
+// ══════════════════════════════════════════════════════════════
+function updateR16Agg(tieId) {
+  const el = document.getElementById('agg-' + tieId);
+  if (!el) return;
+  // find tie
+  let tie = null;
+  for (const comp of ['CL','EL','ECL']) {
+    const found = R16_TIES[comp].find(t => t.id === tieId);
+    if (found) { tie = found; break; }
+  }
+  if (!tie) return;
+  const ur = userResults[tieId];
+  if (!ur || ur.sl_hg === undefined || ur.sl_ag === undefined) {
+    el.textContent = `L1: ${tie.fl_hg}–${tie.fl_ag}`;
+    return;
+  }
+  const homeAgg = tie.fl_hg + ur.sl_ag;
+  const awayAgg = tie.fl_ag + ur.sl_hg;
+  el.textContent = `Agg: ${homeAgg}–${awayAgg}`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// PENALTY PICK
+// ══════════════════════════════════════════════════════════════
+function pickPenalty(btn) {
+  const tieId = btn.dataset.tie;
+  const pick = btn.dataset.pick;
+  if (!userResults[tieId]) userResults[tieId] = {};
+  if (userResults[tieId].penWinner === pick) {
+    userResults[tieId].penWinner = undefined;
+    btn.classList.remove('selected');
+  } else {
+    userResults[tieId].penWinner = pick;
+    btn.closest('.pen-area').querySelectorAll('.pen-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  }
+  // determine if this is R16 or later
+  const isR16 = ['CL','EL','ECL'].some(c => R16_TIES[c].some(t => t.id === tieId));
+  if (isR16) {
+    updateR16Agg(tieId);
+    refreshR16WinnerHighlight(tieId);
+  } else {
+    const isFinal = tieId.endsWith('-F');
+    updateAgg(tieId, isFinal);
+    updateWinnerHighlight(tieId, isFinal);
+  }
+  scheduleUpdate();
+}
+
+function refreshR16WinnerHighlight(tieId) {
+  let tie = null;
+  for (const comp of ['CL','EL','ECL']) {
+    const found = R16_TIES[comp].find(t => t.id === tieId);
+    if (found) { tie = found; break; }
+  }
+  if (!tie) return;
+  const homeRow = document.getElementById('row-' + tieId + '-home');
+  const awayRow = document.getElementById('row-' + tieId + '-away');
+  const card = document.getElementById('card-' + tieId);
+  const ur = userResults[tieId];
+  homeRow.classList.remove('winner','loser');
+  awayRow.classList.remove('winner','loser');
+  if (card) card.classList.remove('decided');
+  if (!ur || ur.sl_hg === undefined || ur.sl_ag === undefined) return;
+  const homeAgg = tie.fl_hg + ur.sl_ag;
+  const awayAgg = tie.fl_ag + ur.sl_hg;
+  let winner = null;
+  if (homeAgg > awayAgg) winner = 'home';
+  else if (awayAgg > homeAgg) winner = 'away';
+  else winner = ur.penWinner;
+  if (winner === 'home') { homeRow.classList.add('winner'); awayRow.classList.add('loser'); if (card) card.classList.add('decided'); }
+  else if (winner === 'away') { awayRow.classList.add('winner'); homeRow.classList.add('loser'); if (card) card.classList.add('decided'); }
+}
+
+// ══════════════════════════════════════════════════════════════
+// SCORE INPUT HANDLER
+// ══════════════════════════════════════════════════════════════
+function onScoreInput(e) {
+  const inp = e.target;
+  const tieId = inp.dataset.tie;
+  const field = inp.dataset.field;
+  const val = inp.value === '' ? undefined : parseInt(inp.value, 10);
+  if (!userResults[tieId]) userResults[tieId] = {};
+  userResults[tieId][field] = val;
+
+  // Check if this tie is R16
+  const isR16 = ['CL','EL','ECL'].some(c => R16_TIES[c].some(t => t.id === tieId));
+  if (isR16) {
+    updateR16Agg(tieId);
+    refreshR16WinnerHighlight(tieId);
+    // Show penalty button if aggregate is tied after 2 legs
+    const penArea = document.getElementById('pen-' + tieId);
+    let tie = null;
+    for (const comp of ['CL','EL','ECL']) {
+      const found = R16_TIES[comp].find(t => t.id === tieId);
+      if (found) { tie = found; break; }
+    }
+    if (tie && penArea) {
+      const ur = userResults[tieId];
+      if (ur.sl_hg !== undefined && ur.sl_ag !== undefined) {
+        const homeAgg = tie.fl_hg + ur.sl_ag;
+        const awayAgg = tie.fl_ag + ur.sl_hg;
+        penArea.style.display = homeAgg === awayAgg ? 'block' : 'none';
+        if (homeAgg !== awayAgg && ur.penWinner) {
+          delete ur.penWinner;
+          penArea.querySelectorAll('.pen-btn').forEach(b => b.classList.remove('selected'));
+        }
+      }
+    }
+  } else {
+    const isFinal = tieId.endsWith('-F');
+    updateAgg(tieId, isFinal);
+    updateWinnerHighlight(tieId, isFinal);
+    // penalties for two-leg ties
+    if (!isFinal) {
+      const penArea = document.getElementById('pen-' + tieId);
+      if (penArea) {
+        const ur = userResults[tieId];
+        if (ur.fl_hg !== undefined && ur.fl_ag !== undefined &&
+            ur.sl_hg !== undefined && ur.sl_ag !== undefined) {
+          const c1Agg = ur.fl_hg + ur.sl_ag;
+          const c2Agg = ur.fl_ag + ur.sl_hg;
+          penArea.style.display = c1Agg === c2Agg ? 'block' : 'none';
+          if (c1Agg !== c2Agg && ur.penWinner) {
+            delete ur.penWinner;
+            penArea.querySelectorAll('.pen-btn').forEach(b => b.classList.remove('selected'));
+          }
+        }
+      }
+    } else {
+      // final: penalty on draw
+      const penArea = document.getElementById('pen-' + tieId);
+      if (penArea) {
+        const ur = userResults[tieId];
+        if (ur.g1 !== undefined && ur.g2 !== undefined) {
+          penArea.style.display = ur.g1 === ur.g2 ? 'block' : 'none';
+          if (ur.g1 !== ur.g2 && ur.penWinner) {
+            delete ur.penWinner;
+            penArea.querySelectorAll('.pen-btn').forEach(b => b.classList.remove('selected'));
+          }
+        }
+      }
+    }
+  }
+
+  // Propagate to later rounds
+  propagateBracket();
+  scheduleUpdate();
+}
+
+function propagateBracket() {
+  ['CL','EL','ECL'].forEach(comp => {
+    // Update bracketState for QF
+    for (let qi = 0; qi < 4; qi++) {
+      const id = `${comp}-QF-${qi}`;
+      const { club1, club2 } = getQFParticipants(comp, qi);
+      if (club1 && club2) {
+        if (!bracketState[id] ||
+            bracketState[id].club1.club !== club1.club ||
+            bracketState[id].club2.club !== club2.club) {
+          bracketState[id] = { club1, club2 };
+          if (userResults[id]) {
+            userResults[id] = {};
+          }
+        }
+      } else {
+        delete bracketState[id];
+      }
+    }
+    populateQF(comp);
+
+    // SF
+    for (let si = 0; si < 2; si++) {
+      const id = `${comp}-SF-${si}`;
+      const qf1Id = `${comp}-QF-${SF_BRACKET[si][0]}`;
+      const qf2Id = `${comp}-QF-${SF_BRACKET[si][1]}`;
+      const c1state = bracketState[qf1Id];
+      const c2state = bracketState[qf2Id];
+      const c1 = c1state ? getTwoLegWinner(qf1Id, c1state.club1, c1state.club2) : null;
+      const c2 = c2state ? getTwoLegWinner(qf2Id, c2state.club1, c2state.club2) : null;
+      if (c1 && c2) {
+        if (!bracketState[id] ||
+            bracketState[id].club1.club !== c1.club ||
+            bracketState[id].club2.club !== c2.club) {
+          bracketState[id] = { club1: c1, club2: c2 };
+          if (userResults[id]) userResults[id] = {};
+        }
+      } else {
+        delete bracketState[id];
+      }
+    }
+    populateSF(comp);
+
+    // Final
+    const id = `${comp}-F`;
+    const sf1Id = `${comp}-SF-0`;
+    const sf2Id = `${comp}-SF-1`;
+    const c1state = bracketState[sf1Id];
+    const c2state = bracketState[sf2Id];
+    const c1 = c1state ? getTwoLegWinner(sf1Id, c1state.club1, c1state.club2) : null;
+    const c2 = c2state ? getTwoLegWinner(sf2Id, c2state.club1, c2state.club2) : null;
+    if (c1 && c2) {
+      if (!bracketState[id] ||
+          bracketState[id].club1.club !== c1.club ||
+          bracketState[id].club2.club !== c2.club) {
+        bracketState[id] = { club1: c1, club2: c2 };
+        if (userResults[id]) userResults[id] = {};
+      }
+    } else {
+      delete bracketState[id];
+    }
+    populateFinal(comp);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// MC ENGINE BRIDGE
+// ══════════════════════════════════════════════════════════════
+function buildOverride() {
+  const ov = {};
+  // R16 winners
+  ['CL','EL','ECL'].forEach(comp => {
+    R16_TIES[comp].forEach((tie, idx) => {
+      const w = getR16Winner(comp, idx);
+      if (w) ov[`r16_${comp}_${idx}`] = w;
+    });
+  });
+  // QF/SF/F winners
+  Object.entries(bracketState).forEach(([id, bs]) => {
+    if (!bs.club1 || !bs.club2) return;
+    const isFinal = id.endsWith('-F');
+    const w = isFinal
+      ? getFinalWinner(id, bs.club1, bs.club2)
+      : getTwoLegWinner(id, bs.club1, bs.club2);
+    if (w) ov[id] = w;
+  });
+  return ov;
+}
+
+function scheduleUpdate() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => triggerMC(50000), 600);
+}
+
+function triggerMC(n) {
+  if (mcWorker) { mcWorker.terminate(); mcWorker = null; }
+  const btn = document.getElementById('run-btn');
+  const status = document.getElementById('sim-status');
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner"></span>Running…`;
+  status.textContent = `Simulating ${n.toLocaleString()} scenarios…`;
+
+  const override = buildOverride();
+  const t0 = performance.now();
+
+  // Use inline worker
+  const workerCode = `
+    importScripts('engine.js', 'clubs.js');
+    self.onmessage = function(e) {
+      const res = runMC(e.data.n, e.data.override);
+      self.postMessage(res);
+    };
+  `;
+  try {
+    const blob = new Blob([workerCode], { type: 'application/javascript' });
+    mcWorker = new Worker(URL.createObjectURL(blob));
+    mcWorker.onmessage = function(e) {
+      const ms = (performance.now() - t0).toFixed(0);
+      mcResult = e.data;
+      renderResults(mcResult);
+      btn.disabled = false;
+      btn.innerHTML = 'Run 100K Simulations';
+      status.textContent = `${n.toLocaleString()} simulations in ${ms}ms`;
+      mcWorker = null;
+    };
+    mcWorker.onerror = function(err) {
+      // fallback to sync
+      runMCSync(n, override, t0, btn, status);
+    };
+    mcWorker.postMessage({ n, override });
+  } catch(e) {
+    runMCSync(n, override, t0, btn, status);
+  }
+}
+
+function runMCSync(n, override, t0, btn, status) {
+  const res = runMC(n, override);
+  const ms = (performance.now() - t0).toFixed(0);
+  mcResult = res;
+  renderResults(mcResult);
+  btn.disabled = false;
+  btn.innerHTML = 'Run 100K Simulations';
+  status.textContent = `${n.toLocaleString()} simulations in ${ms}ms (sync)`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER RESULTS
+// ══════════════════════════════════════════════════════════════
+let distChartInst = null;
+
+function renderResults(res) {
+  updateDashboard(res);
+  renderStandings(res);
+  renderDistChart(res);
+  renderOvertake(res);
+}
+
+function renderStandings(res) {
+  const tbody = document.getElementById('standings-body');
+  const sorted = [...TRACKED].sort((a,b) => res.mean[b] - res.mean[a]);
+  // figure out range extremes across all countries for bar scaling
+  const allMins = TRACKED.map(c => res.p10[c]);
+  const allMaxs = TRACKED.map(c => res.p90[c]);
+  const globalMin = Math.min(...allMins) * 0.995;
+  const globalMax = Math.max(...allMaxs) * 1.005;
+  const span = globalMax - globalMin;
+
+  tbody.innerHTML = sorted.map((c, i) => {
+    const clr = COUNTRY_CLR[c];
+    const isTop = i < 2;
+    const pMin = res.p10[c], pMax = res.p90[c], pMed = res.mean[c];
+    const leftPct = ((pMin - globalMin) / span * 100).toFixed(1);
+    const widthPct = ((pMax - pMin) / span * 100).toFixed(1);
+    const medPct = ((pMed - globalMin) / span * 100).toFixed(1);
+    const iqrLeft = ((res.p25[c] - globalMin) / span * 100).toFixed(1);
+    const iqrWidth = ((res.p75[c] - res.p25[c]) / span * 100).toFixed(1);
+    const prob = res.top2[c];
+    const probClr = prob > 80 ? 'var(--green)' : prob > 40 ? 'var(--yellow)' : 'var(--red)';
+    return `<tr class="${isTop ? 'top2-row' : ''}">
+      <td class="rank-cell ${isTop ? 'top' : ''}">${i+1}</td>
+      <td><div class="nation-cell">
+        <img src="${getFlag(c)}" alt="${c}">
+        <div><div class="name">${c}</div><div class="clubs">${getNationClubsActive(c)}</div></div>
+      </div></td>
+      <td class="num coeff-current">${BASE_COEFF[c].toFixed(3)}</td>
+      <td class="num coeff-confirmed">${(BASE_COEFF[c] + getConfirmedExtra(c)).toFixed(3)}</td>
+      <td class="num">${res.mean[c].toFixed(3)}</td>
+      <td><div class="range-cell">
+        <div class="range-bar-wrap">
+          <div class="range-bar" style="left:${leftPct}%;width:${widthPct}%;background:${clr}"></div>
+          <div class="range-iqr" style="left:${iqrLeft}%;width:${iqrWidth}%;background:${clr}"></div>
+          <div class="range-median" style="left:${medPct}%;background:${clr}"></div>
+        </div>
+        <span class="range-label">${pMin.toFixed(2)}–${pMax.toFixed(2)}</span>
+      </div></td>
+      <td class="num"><span class="top2-pct" style="color:${probClr}">${prob.toFixed(1)}%</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderDistChart(res) {
+  const ctx = document.getElementById('distChart').getContext('2d');
+  if (distChartInst) distChartInst.destroy();
+  const labels = [];
+  const step = 0.05;
+  const allVals = TRACKED.flatMap(c => [res.p10[c], res.p90[c]]);
+  const minV = Math.min(...allVals) - 0.1;
+  const maxV = Math.max(...allVals) + 0.1;
+  for (let v = minV; v <= maxV; v += step) labels.push(v.toFixed(2));
+
+  const datasets = TRACKED.map(c => ({
+    label: c,
+    data: labels.map(lbl => {
+      const v = parseFloat(lbl);
+      const mu = res.mean[c];
+      const sigma = (res.p90[c] - res.p10[c]) / 2.56;
+      return (1 / (sigma * Math.sqrt(2*Math.PI))) * Math.exp(-0.5*((v-mu)/sigma)**2) * step;
+    }),
+    borderColor: COUNTRY_CLR[c],
+    backgroundColor: COUNTRY_CLR[c] + '22',
+    fill: true, tension: 0.4, pointRadius: 0,
+    borderWidth: 2,
+  }));
+
+  distChartInst = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } },
+      scales: {
+        x: { ticks: { color: '#64748b', maxTicksLimit: 8, font: { size: 10 } }, grid: { color: '#1e293b' } },
+        y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: '#1e293b' } },
+      }
+    }
+  });
+}
+
+function renderOvertake(res) {
+  const wrap = document.getElementById('overtake-wrap');
+  const rows = [];
+  TRACKED.forEach(a => {
+    TRACKED.forEach(b => {
+      if (a === b) return;
+      const prob = res.overtake[a + '_beats_' + b];
+      if (prob === undefined) return;
+      rows.push({ a, b, prob });
+    });
+  });
+  rows.sort((x,y) => Math.abs(y.prob - 50) - Math.abs(x.prob - 50));
+  wrap.innerHTML = `<table class="overtake-table">
+    <thead><tr><th>Nation</th><th>vs</th><th>P(overtake)</th><th>Visual</th></tr></thead>
+    <tbody>
+    ${rows.slice(0,10).map(r => {
+      const clr = COUNTRY_CLR[r.a];
+      const pct = r.prob.toFixed(1);
+      return `<tr>
+        <td><span style="color:${clr};font-weight:700">${r.a}</span></td>
+        <td style="color:var(--text-muted)">beats ${r.b}</td>
+        <td style="font-weight:700;color:${r.prob>50?'var(--green)':'var(--red)'}">${pct}%</td>
+        <td><div style="background:var(--border);border-radius:3px;height:8px;width:100px;overflow:hidden">
+          <div style="background:${clr};height:100%;width:${pct}%;border-radius:3px"></div></div></td>
+      </tr>`;
+    }).join('')}
+    </tbody></table>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════════════
+document.querySelectorAll('.comp-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.comp-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.bracket-container').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('bracket-' + tab.dataset.comp).classList.add('active');
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+buildDashboard();
+buildAllBrackets();
+
+// Init R16 agg displays
+['CL','EL','ECL'].forEach(comp => {
+  R16_TIES[comp].forEach(tie => updateR16Agg(tie.id));
+});
+
+// Attach R16 input events
+document.querySelectorAll('.score-input').forEach(inp => {
+  inp.addEventListener('input', onScoreInput);
+});
+
+// Run initial MC
+triggerMC(50000);
+</script>
+</body>
+</html>
