@@ -1,44 +1,95 @@
 # UEFA Coefficient Bracket Predictor
 
-Interactive Monte Carlo simulation for predicting which nations earn UEFA's extra Champions League spots for 2026/27.
+Interactive Monte Carlo simulation for predicting UEFA country coefficient standings for the 2025/26 season. Enter match results and watch probabilities update in real time.
 
-## What This Does
+## Quick Start (Local)
 
-The **UEFA European Performance Spot** awards the top 2 nations by single-season association coefficient an extra Champions League place. This tool lets you enter match results across CL, EL, and Conference League knockout rounds and instantly see how each result shifts the coefficient probabilities.
+```bash
+npm install
+npm start
+# Open http://localhost:3000
+```
 
-## Features
+## Deploy to Digital Ocean
 
-- **Interactive Bracket**: Enter second-leg scores for R16, QF, SF, and Final matches across all 3 competitions
-- **Live Probability Updates**: 50K Monte Carlo simulations run in-browser on every result change
-- **Club Badges & Flags**: Visual team identification with UEFA badges and nationality flags
-- **Aggregate Scoring**: Correct two-legged tie resolution with penalty shootout handling
-- **Pre-drawn Bracket Routing**: Follows the actual UEFA QF/SF draw paths
-- **Coefficient Distribution Chart**: Live-updating probability distributions for all 5 nations
-- **Overtake Probabilities**: Real-time tracking of which nations could overtake England
+### Option 1: One-Line Deploy (Docker)
 
-## Current Data (as of 12 March 2026)
+SSH into your droplet and run:
 
-| Country | Current Coeff | Top-2 Probability |
-|---------|:---:|:---:|
-| England | 22.847 | ~100% |
-| Spain | 18.406 | ~72% |
-| Germany | 18.143 | ~26% |
-| Italy | 17.929 | ~1.5% |
-| France | 15.679 | ~0.5% |
+```bash
+curl -sL https://raw.githubusercontent.com/msansoni/uefa-coefficient-predictor/main/deploy.sh | bash -s -- uefa.michaelsansoni.com
+```
 
-## Live Dashboard
+Or clone and run manually:
 
-🔗 [View the interactive predictor](https://msansoni.github.io/uefa-coefficient-predictor/)
+```bash
+git clone https://github.com/msansoni/uefa-coefficient-predictor.git /opt/uefa-predictor
+cd /opt/uefa-predictor
+./deploy.sh uefa.michaelsansoni.com
+```
 
-## Technical Details
+This installs Docker (if needed), builds the app, and starts it behind nginx with rate limiting.
 
-- **Engine**: JavaScript Monte Carlo simulation running entirely in-browser
-- **Match Model**: Poisson distribution for goal scoring (λ=1.3-1.4 home, λ=1.1 away)
-- **Simulations**: 50K iterations per update, 100K available via manual trigger
-- **No backend required**: Pure client-side computation
+### Option 2: PM2 (No Docker)
 
-## Built with
+```bash
+# Install Node.js 20+
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
 
-- JavaScript (Monte Carlo engine)
-- Chart.js (data visualization)
-- Created with [Perplexity Computer](https://www.perplexity.ai/computer)
+# Install PM2
+sudo npm install -g pm2
+
+# Clone and start
+git clone https://github.com/msansoni/uefa-coefficient-predictor.git /opt/uefa-predictor
+cd /opt/uefa-predictor
+npm install --omit=dev
+npm run pm2:start
+
+# Auto-start on reboot
+pm2 save
+pm2 startup
+```
+
+### Enable HTTPS (Let's Encrypt)
+
+After DNS is pointing to your droplet:
+
+```bash
+cd /opt/uefa-predictor
+
+# Get certificate
+docker compose run --rm certbot certonly --webroot -w /var/www/certbot -d your-domain.com
+
+# Uncomment the HTTPS server block in nginx/default.conf
+# Uncomment the certbot service in docker-compose.yml
+# Restart
+docker compose up -d --build
+```
+
+## Architecture
+
+```
+uefa-node/
+├── server.js              # Express server (gzip, helmet, static serving)
+├── package.json
+├── ecosystem.config.cjs   # PM2 cluster config
+├── Dockerfile             # Alpine Node.js container
+├── docker-compose.yml     # App + nginx + optional certbot
+├── deploy.sh              # One-command DO setup
+├── nginx/
+│   └── default.conf       # Reverse proxy, rate limiting, caching
+└── public/
+    ├── index.html          # Single-page application
+    ├── engine.js           # Monte Carlo simulation engine
+    └── clubs.js            # Club metadata (badges, flags, colors)
+```
+
+The app is entirely client-side — the Node.js server just serves static files with proper headers. Monte Carlo simulations run in the browser so there's zero server load from computation.
+
+## Environment Variables
+
+| Variable   | Default       | Description           |
+|-----------|---------------|-----------------------|
+| `PORT`    | `3000`        | Server port           |
+| `NODE_ENV`| `development` | `production` for prod |
