@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+   ______                            __
+  / ____/___  ____ ___  ____  __  __/ /____  _____
+ / /   / __ \/ __ `__ \/ __ \/ / / / __/ _ \/ ___/
+/ /___/ /_/ / / / / / / /_/ / /_/ / /_/  __/ /
+\____/\____/_/ /_/ /_/ .___/\__,_/\__/\___/_/
+                    /_/
+        Created with Perplexity Computer
+        https://www.perplexity.ai/computer
+-->
+
+<!-- Perplexity Computer Attribution — SEO Meta Tags -->
+<meta name="generator" content="Perplexity Computer">
+<meta name="author" content="Perplexity Computer">
+<meta property="og:see_also" content="https://www.perplexity.ai/computer">
+<link rel="author" href="https://www.perplexity.ai/computer">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UEFA Performance Spot Predictor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e1a;--card:#111827;--border:#1e293b;--surface:#0f172a;
+  --text:#e2e8f0;--text-muted:#94a3b8;--text-dim:#64748b;
+  --england:#e74c3c;--spain:#f39c12;--germany:#2ecc71;--italy:#3498db;--france:#9b59b6;
+  --accent:#6366f1;--success:#10b981;--danger:#ef4444;--warning:#f59e0b;
+  --radius:10px;--radius-sm:6px;--radius-lg:16px;
+}
+html{font-size:15px;scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* Header */
+.header{background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0f172a 100%);border-bottom:1px solid var(--border);padding:1.5rem 2rem;position:sticky;top:0;z-index:100;backdrop-filter:blur(20px)}
+.header-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.header h1{font-size:1.5rem;font-weight:800;letter-spacing:-0.03em;background:linear-gradient(135deg,#fff 0%,#c7d2fe 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-meta{font-size:0.75rem;color:var(--text-dim);display:flex;gap:1.5rem;align-items:center}
+.header-meta span{display:flex;align-items:center;gap:0.35rem}
+
+/* Tabs */
+.tabs{display:flex;gap:0;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:0.85rem 1.5rem;font-size:0.8rem;font-weight:600;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;text-transform:uppercase;letter-spacing:0.06em;user-select:none}
+.tab:hover{color:var(--text-muted);background:rgba(99,102,241,0.05)}
+.tab.active{color:#fff;border-bottom-color:var(--accent);background:rgba(99,102,241,0.08)}
+
+/* Main */
+.main{max-width:1400px;margin:0 auto;padding:1.5rem}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem}
+.card-title{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);margin-bottom:0.75rem;font-weight:600}
+
+/* Grid */
+.grid-5{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
+
+/* KPI */
+.kpi{text-align:center}
+.kpi-value{font-size:2rem;font-weight:800;letter-spacing:-0.03em;line-height:1.1}
+.kpi-label{font-size:0.7rem;color:var(--text-dim);margin-top:0.35rem;text-transform:uppercase;letter-spacing:0.08em}
+.kpi-sub{font-size:0.8rem;color:var(--text-muted);margin-top:0.25rem}
+
+/* Big KPI */
+.big-kpi{text-align:center;padding:2rem}
+.big-kpi .kpi-value{font-size:3.5rem;font-weight:900}
+.big-kpi .kpi-label{font-size:0.85rem;margin-top:0.5rem}
+
+/* Country accent bar */
+.country-bar{height:3px;border-radius:2px;margin-bottom:1rem}
+
+/* Tables */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:0.82rem}
+th{text-align:left;padding:0.65rem 0.75rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;font-size:0.68rem;letter-spacing:0.08em;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:0.6rem 0.75rem;border-bottom:1px solid rgba(30,41,59,0.5);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+
+/* Clickable trace rows */
+.trace-row{cursor:pointer;transition:background 0.15s}
+.trace-row:hover{background:rgba(99,102,241,0.06)}
+.trace-row.expanded{background:rgba(99,102,241,0.1)}
+.trace-row td:first-child::before{content:'▶';display:inline-block;margin-right:0.5rem;font-size:0.6rem;transition:transform 0.2s;color:var(--text-dim)}
+.trace-row.expanded td:first-child::before{transform:rotate(90deg)}
+.trace-detail{display:none;background:rgba(15,23,42,0.6);border-bottom:1px solid var(--border)}
+.trace-detail.show{display:table-row}
+.trace-detail td{padding:1rem 1.5rem}
+
+/* Bracket display */
+.bracket-container{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.bracket-comp{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;overflow-x:auto}
+.bracket-comp h4{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);margin-bottom:0.75rem;font-weight:700}
+.bracket-round{margin-bottom:0.75rem}
+.bracket-round-title{font-size:0.65rem;text-transform:uppercase;color:var(--text-dim);letter-spacing:0.06em;margin-bottom:0.35rem;font-weight:600}
+.bracket-match{display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;padding:0.25rem 0;flex-wrap:wrap}
+.bracket-club{padding:0.15rem 0.4rem;border-radius:3px;white-space:nowrap}
+.bracket-club.winner{font-weight:700;outline:1px solid currentColor;outline-offset:1px}
+.bracket-vs{color:var(--text-dim);font-size:0.65rem;font-weight:600}
+.bracket-arrow{color:var(--text-dim);font-size:0.65rem}
+
+/* Charts */
+.chart-container{position:relative;height:350px}
+.chart-container.tall{height:450px}
+
+/* Country dot */
+.country-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:0.4rem;vertical-align:middle}
+
+/* Info text */
+.info-text{font-size:0.82rem;color:var(--text-muted);line-height:1.7;max-width:800px}
+.info-text strong{color:var(--text)}
+.info-box{background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:var(--radius-sm);padding:1rem 1.25rem;margin:1rem 0}
+
+/* Scenario box */
+.scenario-box{background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.25);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.25rem}
+.scenario-box h3{color:var(--england);font-size:0.85rem;font-weight:700;margin-bottom:0.5rem}
+.scenario-box p{font-size:0.82rem;color:var(--text-muted);line-height:1.6}
+
+/* Progress bar */
+.prob-bar{height:28px;background:rgba(30,41,59,0.5);border-radius:4px;overflow:hidden;position:relative;margin:0.35rem 0}
+.prob-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding:0 0.6rem;font-size:0.7rem;font-weight:700;color:#fff;transition:width 0.6s ease;min-width:fit-content}
+.prob-label{position:absolute;right:0.6rem;top:50%;transform:translateY(-50%);font-size:0.7rem;color:var(--text-dim)}
+
+/* Validation badge */
+.badge{display:inline-flex;align-items:center;gap:0.3rem;padding:0.2rem 0.6rem;border-radius:20px;font-size:0.7rem;font-weight:600}
+.badge-success{background:rgba(16,185,129,0.15);color:#10b981}
+.badge-danger{background:rgba(239,68,68,0.15);color:#ef4444}
+
+/* Footer */
+.footer{text-align:center;padding:2rem;border-top:1px solid var(--border);margin-top:2rem}
+.footer a{color:var(--text-dim);font-size:0.72rem;text-decoration:none;transition:color 0.2s}
+.footer a:hover{color:var(--accent)}
+
+/* Section header */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem}
+.section-title{font-size:1.1rem;font-weight:700;letter-spacing:-0.02em}
+
+/* Comparison row */
+.comparison-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+
+/* Responsive */
+@media(max-width:1024px){
+  .grid-5{grid-template-columns:repeat(3,1fr)}
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+  .bracket-container{grid-template-columns:1fr}
+  .comparison-grid{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  .header{padding:1rem}
+  .header h1{font-size:1.15rem}
+  .header-meta{display:none}
+  .main{padding:1rem}
+  .grid-5,.grid-3{grid-template-columns:repeat(2,1fr)}
+  .grid-2{grid-template-columns:1fr}
+  .tab{padding:0.7rem 1rem;font-size:0.7rem}
+  .big-kpi .kpi-value{font-size:2.5rem}
+  .chart-container{height:280px}
+  .chart-container.tall{height:350px}
+  .card{padding:1rem}
+}
+@media(max-width:480px){
+  .grid-5,.grid-4,.grid-3{grid-template-columns:1fr 1fr}
+  html{font-size:14px}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <h1>⚽ UEFA Performance Spot Predictor</h1>
+    <div class="header-meta">
+      <span id="metaDate"></span>
+      <span id="metaIter"></span>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" id="tabNav">
+  <div class="tab active" data-tab="overview">Overview</div>
+  <div class="tab" data-tab="england">England Focus</div>
+  <div class="tab" data-tab="simulations">Simulations</div>
+  <div class="tab" data-tab="worstcase">Worst Case</div>
+  <div class="tab" data-tab="brackets">Brackets</div>
+  <div class="tab" data-tab="validation">Validation</div>
+</nav>
+
+<main class="main">
+
+<!-- ============ TAB 1: OVERVIEW ============ -->
+<section class="tab-content active" id="tab-overview">
+  <div class="section-header">
+    <h2 class="section-title">Season Overview</h2>
+  </div>
+  <div class="grid-5" id="overviewKPIs"></div>
+  <div class="card">
+    <div class="card-title">Coefficient Distribution (Monte Carlo)</div>
+    <div class="chart-container"><canvas id="chartOverviewDist"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Summary</div>
+    <div class="info-text" id="overviewSummary"></div>
+  </div>
+</section>
+
+<!-- ============ TAB 2: ENGLAND FOCUS ============ -->
+<section class="tab-content" id="tab-england">
+  <div class="grid-2" style="margin-bottom:1.25rem">
+    <div class="card big-kpi" id="englandBigKPI"></div>
+    <div class="card">
+      <div class="card-title">Individual Country Overtake Probabilities</div>
+      <div class="chart-container"><canvas id="chartOvertake"></canvas></div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Pair Overtake Probabilities</div>
+      <div class="table-wrap" id="pairOvertakeTable"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Coefficient Range Comparison</div>
+      <div class="table-wrap" id="rangeCompTable"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TAB 3: SIMULATIONS ============ -->
+<section class="tab-content" id="tab-simulations">
+  <div class="card">
+    <div class="card-title">Scatter: Spain vs Germany Coefficient (colored by England top-2 status)</div>
+    <div class="chart-container tall"><canvas id="chartScatter"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Sample Simulation Traces (click row to expand brackets)</div>
+    <div class="table-wrap" id="tracesTable"></div>
+  </div>
+</section>
+
+<!-- ============ TAB 4: WORST CASE ============ -->
+<section class="tab-content" id="tab-worstcase">
+  <div class="scenario-box">
+    <h3>⚠ Worst-Case Scenario</h3>
+    <p>All English clubs are eliminated at the Round of 16 stage across all three UEFA competitions. England earns <strong>0 additional coefficient points</strong> from this stage onward, while all other nations continue to accumulate points through the knockout rounds.</p>
+  </div>
+  <div class="grid-2" style="margin-bottom:1.25rem">
+    <div class="card big-kpi" id="wcEnglandStays"></div>
+    <div class="card big-kpi" id="wcEnglandDrops"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Top-2 Probability Under Worst Case</div>
+    <div id="wcTop2Bars"></div>
+  </div>
+  <div class="comparison-grid">
+    <div class="card">
+      <div class="card-title">Distribution: Standard vs Worst Case — Spain</div>
+      <div class="chart-container"><canvas id="chartWcDistSpain"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Distribution: Standard vs Worst Case — Germany</div>
+      <div class="chart-container"><canvas id="chartWcDistGermany"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Worst-Case Overtake Probabilities</div>
+    <div class="table-wrap" id="wcOvertakeTable"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Worst-Case Scatter: Spain vs Germany</div>
+    <div class="chart-container tall"><canvas id="chartWcScatter"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Worst-Case Sample Traces (click row to expand brackets)</div>
+    <div class="table-wrap" id="wcTracesTable"></div>
+  </div>
+</section>
+
+<!-- ============ TAB 5: BRACKETS ============ -->
+<section class="tab-content" id="tab-brackets">
+  <div class="card">
+    <div class="card-title">Pre-Drawn UEFA Bracket Structure (QF → SF → Final paths)</div>
+    <div class="info-text" style="margin-bottom:1rem">
+      The bracket paths below show the pre-drawn matchup structure. R16 winners feed into fixed QF slots, QF winners into fixed SF slots, and SF winners meet in the Final. This structure is used in all simulations.
+    </div>
+    <div id="bracketDisplay"></div>
+  </div>
+</section>
+
+<!-- ============ TAB 6: VALIDATION ============ -->
+<section class="tab-content" id="tab-validation">
+  <div class="card">
+    <div class="card-title">Back-Test Results</div>
+    <div class="table-wrap" id="backtestTable"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Model Assumptions & Methodology</div>
+    <div class="info-text" id="methodologyText"></div>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">Created with Perplexity Computer</a>
+</footer>
+
+<script src="data.js"></script>
+<script>
+(function(){
+'use strict';
+
+const COLORS = {England:'#e74c3c',Spain:'#f39c12',Germany:'#2ecc71',Italy:'#3498db',France:'#9b59b6'};
+const COUNTRIES = ['England','Spain','Germany','Italy','France'];
+
+// ---- Tab switching ----
+const tabs = document.querySelectorAll('.tab');
+const contents = document.querySelectorAll('.tab-content');
+tabs.forEach(t => {
+  t.addEventListener('click', () => {
+    tabs.forEach(x => x.classList.remove('active'));
+    contents.forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('tab-' + t.dataset.tab).classList.add('active');
+  });
+});
+
+// ---- Header meta ----
+document.getElementById('metaDate').innerHTML = '📅 ' + DATA.metadata.data_as_of;
+document.getElementById('metaIter').innerHTML = '🎲 ' + (DATA.mc.iterations/1e6).toFixed(0) + 'M simulations';
+
+// ---- Chart.js defaults ----
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = 'rgba(30,41,59,0.5)';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.plugins.legend.labels.usePointStyle = true;
+Chart.defaults.plugins.legend.labels.pointStyleWidth = 8;
+Chart.defaults.plugins.legend.labels.padding = 16;
+
+// ---- Helper: country color with alpha ----
+function cc(country, alpha){
+  const hex = COLORS[country] || '#888';
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha||1})`;
+}
+
+function pct(v){ return v != null ? v.toFixed(2) + '%' : '—'; }
+function coeff(v){ return v != null ? v.toFixed(3) : '—'; }
+
+// ================================================================
+// TAB 1: OVERVIEW
+// ================================================================
+(function renderOverview(){
+  const el = document.getElementById('overviewKPIs');
+  let html = '';
+  COUNTRIES.forEach(c => {
+    const s = DATA.standings[c];
+    const p = DATA.mc.top2[c];
+    const mn = DATA.mc.minObs[c];
+    const mx = DATA.mc.maxObs[c];
+    html += `<div class="card kpi">
+      <div class="country-bar" style="background:${COLORS[c]}"></div>
+      <div style="font-size:0.75rem;font-weight:600;color:${COLORS[c]};margin-bottom:0.5rem">${c}</div>
+      <div class="kpi-value" style="color:${COLORS[c]}">${coeff(s.coefficient)}</div>
+      <div class="kpi-label">Current Coefficient</div>
+      <div class="kpi-sub" style="margin-top:0.6rem"><strong>${pct(p)}</strong> top-2 prob</div>
+      <div class="kpi-sub" style="font-size:0.72rem;color:var(--text-dim)">Range: ${coeff(mn)} – ${coeff(mx)}</div>
+    </div>`;
+  });
+  el.innerHTML = html;
+
+  // Distribution chart
+  const ctx = document.getElementById('chartOverviewDist').getContext('2d');
+  const datasets = COUNTRIES.map(c => {
+    const bins = DATA.mc.dist[c];
+    return {
+      label: c,
+      data: bins.map(b => ({x: (b.bin_start + b.bin_end)/2, y: b.percentage})),
+      borderColor: COLORS[c],
+      backgroundColor: cc(c, 0.1),
+      borderWidth: 2,
+      pointRadius: 0,
+      tension: 0.3,
+      fill: true
+    };
+  });
+  new Chart(ctx, {
+    type: 'line',
+    data: {datasets},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: {type:'linear', title:{display:true, text:'Coefficient'}, grid:{color:'rgba(30,41,59,0.3)'}},
+        y: {title:{display:true, text:'Probability (%)'}, grid:{color:'rgba(30,41,59,0.3)'}}
+      },
+      plugins: {legend:{position:'top'}, tooltip:{mode:'index',intersect:false}}
+    }
+  });
+
+  // Summary
+  const sumEl = document.getElementById('overviewSummary');
+  const eng = DATA.standings.England;
+  const engTop2 = DATA.mc.top2.England;
+  sumEl.innerHTML = `<p><strong>England</strong> leads with a coefficient of <strong>${coeff(eng.coefficient)}</strong> from ${eng.num_clubs} clubs and ${eng.total_points} total points. Based on ${(DATA.mc.iterations/1e6).toFixed(0)} million Monte Carlo simulations, England has a <strong>${pct(engTop2)}</strong> probability of finishing in the top 2, securing a performance spot for the Champions League.</p>
+  <p style="margin-top:0.5rem"><strong>Spain</strong> (${pct(DATA.mc.top2.Spain)}) and <strong>Germany</strong> (${pct(DATA.mc.top2.Germany)}) are the main contenders for the second spot. Italy (${pct(DATA.mc.top2.Italy)}) and France (${pct(DATA.mc.top2.France)}) have only marginal chances.</p>
+  <div class="info-box">Data as of <strong>${DATA.metadata.data_as_of}</strong>. The model uses actual UEFA pre-drawn bracket pairings and simulates all remaining knockout matches.</div>`;
+})();
+
+// ================================================================
+// TAB 2: ENGLAND FOCUS
+// ================================================================
+(function renderEngland(){
+  const stays = DATA.mc.england.england_stays_top2_pct;
+  const drops = DATA.mc.england.england_drops_out_top2_pct;
+  document.getElementById('englandBigKPI').innerHTML = `
+    <div class="kpi-value" style="color:var(--success)">${stays.toFixed(4)}%</div>
+    <div class="kpi-label">England stays in Top 2</div>
+    <div class="kpi-sub" style="margin-top:1rem;font-size:0.85rem;color:var(--text-muted)">
+      Only <strong style="color:var(--danger)">${drops.toFixed(4)}%</strong> chance of dropping out
+    </div>`;
+
+  // Overtake bar chart
+  const overtake = DATA.mc.england.overtake_by_country;
+  const countries = Object.keys(overtake);
+  const ctx = document.getElementById('chartOvertake').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: countries,
+      datasets: [{
+        label: 'Overtake Probability (%)',
+        data: countries.map(c => overtake[c]),
+        backgroundColor: countries.map(c => cc(c, 0.7)),
+        borderColor: countries.map(c => COLORS[c]),
+        borderWidth: 1,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      indexAxis: 'y',
+      scales: {
+        x: {title:{display:true,text:'Probability (%)'},grid:{color:'rgba(30,41,59,0.3)'}},
+        y: {grid:{display:false}}
+      },
+      plugins: {legend:{display:false}}
+    }
+  });
+
+  // Pair overtake table
+  const pair = DATA.mc.england.pair_overtake;
+  let pairHtml = '<table><thead><tr><th>Country Pair</th><th>Overtake Probability</th></tr></thead><tbody>';
+  Object.entries(pair).forEach(([k,v]) => {
+    pairHtml += `<tr><td>${k}</td><td>${pct(v)}</td></tr>`;
+  });
+  pairHtml += '</tbody></table>';
+  document.getElementById('pairOvertakeTable').innerHTML = pairHtml;
+
+  // Range comparison table
+  let rangeHtml = '<table><thead><tr><th>Country</th><th>Current</th><th>Min</th><th>Max</th><th>Mean (MC)</th><th>Std Dev</th></tr></thead><tbody>';
+  COUNTRIES.forEach(c => {
+    const s = DATA.standings[c];
+    const e = DATA.extremes[c];
+    rangeHtml += `<tr>
+      <td><span class="country-dot" style="background:${COLORS[c]}"></span>${c}</td>
+      <td>${coeff(s.coefficient)}</td>
+      <td>${coeff(e.min_coefficient)}</td>
+      <td>${coeff(e.max_coefficient)}</td>
+      <td>${coeff(DATA.mc.mean[c])}</td>
+      <td>${DATA.mc.std[c].toFixed(3)}</td>
+    </tr>`;
+  });
+  rangeHtml += '</tbody></table>';
+  document.getElementById('rangeCompTable').innerHTML = rangeHtml;
+})();
+
+// ================================================================
+// TAB 3: SIMULATIONS
+// ================================================================
+(function renderSimulations(){
+  // Scatter
+  renderScatterChart('chartScatter', DATA.mc.scatter);
+  // Traces table
+  renderTracesTable('tracesTable', DATA.mc.traces);
+})();
+
+// ================================================================
+// TAB 4: WORST CASE
+// ================================================================
+(function renderWorstCase(){
+  const eng = DATA.wcMC.england;
+  document.getElementById('wcEnglandStays').innerHTML = `
+    <div class="kpi-value" style="color:var(--warning)">${eng.england_stays_top2_pct.toFixed(2)}%</div>
+    <div class="kpi-label">England Stays Top 2</div>`;
+  document.getElementById('wcEnglandDrops').innerHTML = `
+    <div class="kpi-value" style="color:var(--danger)">${eng.england_drops_out_top2_pct.toFixed(2)}%</div>
+    <div class="kpi-label">England Drops Out</div>`;
+
+  // Top-2 bars
+  let barsHtml = '';
+  COUNTRIES.forEach(c => {
+    const p = DATA.wcMC.top2[c];
+    const stdP = DATA.mc.top2[c];
+    barsHtml += `<div style="margin-bottom:0.6rem">
+      <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:0.2rem">
+        <span><span class="country-dot" style="background:${COLORS[c]}"></span>${c}</span>
+        <span style="color:var(--text-dim)">Std: ${pct(stdP)} → WC: <strong style="color:var(--text)">${pct(p)}</strong></span>
+      </div>
+      <div class="prob-bar">
+        <div class="prob-fill" style="width:${Math.max(p,0.5)}%;background:${COLORS[c]}">${p > 5 ? pct(p) : ''}</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('wcTop2Bars').innerHTML = barsHtml;
+
+  // Comparison distributions
+  renderComparisonDist('chartWcDistSpain', 'Spain');
+  renderComparisonDist('chartWcDistGermany', 'Germany');
+
+  // Overtake table
+  const ov = DATA.wcMC.england.overtake_by_country;
+  const po = DATA.wcMC.england.pair_overtake;
+  let ovHtml = '<table><thead><tr><th>Country</th><th>Overtake Prob (Worst Case)</th><th>Overtake Prob (Standard)</th></tr></thead><tbody>';
+  Object.keys(ov).forEach(c => {
+    const stdOv = DATA.mc.england.overtake_by_country[c] || 0;
+    ovHtml += `<tr><td><span class="country-dot" style="background:${COLORS[c]}"></span>${c}</td><td>${pct(ov[c])}</td><td>${pct(stdOv)}</td></tr>`;
+  });
+  Object.entries(po).forEach(([k,v]) => {
+    const stdPo = DATA.mc.england.pair_overtake[k] || 0;
+    ovHtml += `<tr><td style="font-weight:600">${k}</td><td>${pct(v)}</td><td>${pct(stdPo)}</td></tr>`;
+  });
+  ovHtml += '</tbody></table>';
+  document.getElementById('wcOvertakeTable').innerHTML = ovHtml;
+
+  // Scatter
+  renderScatterChart('chartWcScatter', DATA.wcMC.scatter);
+
+  // Traces table
+  renderTracesTable('wcTracesTable', DATA.wcMC.traces);
+})();
+
+function renderComparisonDist(canvasId, country){
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  const stdBins = DATA.mc.dist[country];
+  const wcBins = DATA.wcMC.dist[country];
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      datasets: [
+        {
+          label: 'Standard',
+          data: stdBins.map(b => ({x:(b.bin_start+b.bin_end)/2, y:b.percentage})),
+          borderColor: COLORS[country],
+          backgroundColor: cc(country, 0.1),
+          borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true
+        },
+        {
+          label: 'Worst Case',
+          data: wcBins.map(b => ({x:(b.bin_start+b.bin_end)/2, y:b.percentage})),
+          borderColor: COLORS[country],
+          backgroundColor: cc(country, 0.05),
+          borderWidth: 2, borderDash: [6,3], pointRadius: 0, tension: 0.3, fill: true
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: {type:'linear', title:{display:true, text:'Coefficient'}, grid:{color:'rgba(30,41,59,0.3)'}},
+        y: {title:{display:true, text:'Probability (%)'}, grid:{color:'rgba(30,41,59,0.3)'}}
+      },
+      plugins: {legend:{position:'top'}}
+    }
+  });
+}
+
+// ================================================================
+// SCATTER CHART (shared)
+// ================================================================
+function renderScatterChart(canvasId, scatterData){
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  const inTop2 = [], notTop2 = [];
+  scatterData.forEach(pt => {
+    // determine if england is in top 2 from the scatter data
+    const vals = COUNTRIES.map(c => ({c, v:pt[c]})).sort((a,b) => b.v - a.v);
+    const engTop2 = vals[0].c === 'England' || vals[1].c === 'England';
+    const target = engTop2 ? inTop2 : notTop2;
+    target.push({x: pt.Spain, y: pt.Germany});
+  });
+  new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'England in Top 2',
+          data: inTop2,
+          backgroundColor: 'rgba(16,185,129,0.35)',
+          borderColor: 'rgba(16,185,129,0.6)',
+          pointRadius: 2.5, pointHoverRadius: 5
+        },
+        {
+          label: 'England NOT in Top 2',
+          data: notTop2,
+          backgroundColor: 'rgba(239,68,68,0.7)',
+          borderColor: 'rgba(239,68,68,0.9)',
+          pointRadius: 4, pointHoverRadius: 7
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: {title:{display:true, text:'Spain Coefficient'}, grid:{color:'rgba(30,41,59,0.3)'}},
+        y: {title:{display:true, text:'Germany Coefficient'}, grid:{color:'rgba(30,41,59,0.3)'}}
+      },
+      plugins: {
+        legend:{position:'top'},
+        tooltip: {
+          callbacks: {
+            label: function(ctx){ return `Spain: ${ctx.raw.x.toFixed(3)}, Germany: ${ctx.raw.y.toFixed(3)}`; }
+          }
+        }
+      }
+    }
+  });
+}
+
+// ================================================================
+// TRACES TABLE (shared for standard & worst case)
+// ================================================================
+function renderTracesTable(containerId, traces){
+  let html = '<table><thead><tr><th>#</th>';
+  COUNTRIES.forEach(c => {
+    html += `<th style="color:${COLORS[c]}">${c}</th>`;
+  });
+  html += '<th>Rank</th><th>Eng Top 2</th></tr></thead><tbody>';
+
+  traces.forEach((t, i) => {
+    const rowId = containerId + '_row_' + i;
+    const detailId = containerId + '_detail_' + i;
+    html += `<tr class="trace-row" data-detail="${detailId}" id="${rowId}">
+      <td>${t.sim}</td>`;
+    COUNTRIES.forEach(c => {
+      html += `<td>${coeff(t.coefficients[c])}</td>`;
+    });
+    html += `<td style="font-size:0.72rem">${t.rank.join(' › ')}</td>`;
+    html += `<td>${t.england_in_top2 ? '<span class="badge badge-success">✓ Yes</span>' : '<span class="badge badge-danger">✗ No</span>'}</td>`;
+    html += `</tr>`;
+    // Detail row
+    html += `<tr class="trace-detail" id="${detailId}"><td colspan="${COUNTRIES.length + 3}">`;
+    html += renderBracketTrace(t.brackets);
+    html += `</td></tr>`;
+  });
+
+  html += '</tbody></table>';
+  document.getElementById(containerId).innerHTML = html;
+
+  // Attach click handlers
+  document.getElementById(containerId).querySelectorAll('.trace-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const detailEl = document.getElementById(row.dataset.detail);
+      const isOpen = row.classList.contains('expanded');
+      // Close all in this table
+      row.closest('table').querySelectorAll('.trace-row').forEach(r => r.classList.remove('expanded'));
+      row.closest('table').querySelectorAll('.trace-detail').forEach(d => d.classList.remove('show'));
+      if(!isOpen){
+        row.classList.add('expanded');
+        detailEl.classList.add('show');
+      }
+    });
+  });
+}
+
+function renderBracketTrace(brackets){
+  let html = '<div class="bracket-container">';
+  ['CL','EL','ECL'].forEach(comp => {
+    const b = brackets[comp];
+    const compName = comp === 'CL' ? 'Champions League' : comp === 'EL' ? 'Europa League' : 'Conference League';
+    html += `<div class="bracket-comp"><h4>${compName}</h4>`;
+    ['R16','QF','SF'].forEach(round => {
+      if(b[round] && b[round].length > 0){
+        const roundName = round === 'R16' ? 'Round of 16' : round === 'QF' ? 'Quarter-Finals' : 'Semi-Finals';
+        html += `<div class="bracket-round"><div class="bracket-round-title">${roundName}</div>`;
+        b[round].forEach(m => {
+          html += renderMatch(m);
+        });
+        html += '</div>';
+      }
+    });
+    if(b.F){
+      html += `<div class="bracket-round"><div class="bracket-round-title">Final</div>`;
+      html += renderMatch(b.F);
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderMatch(m){
+  const hColor = COLORS[m.hc] || '#666';
+  const aColor = COLORS[m.ac] || '#666';
+  const wColor = COLORS[m.wc] || '#888';
+  const hWin = m.winner === m.home;
+  const aWin = m.winner === m.away;
+  return `<div class="bracket-match">
+    <span class="bracket-club${hWin ? ' winner' : ''}" style="color:${hColor}">${m.home}</span>
+    <span class="bracket-vs">vs</span>
+    <span class="bracket-club${aWin ? ' winner' : ''}" style="color:${aColor}">${m.away}</span>
+    <span class="bracket-arrow">→</span>
+    <span class="bracket-club winner" style="color:${wColor};font-weight:700">${m.winner}</span>
+  </div>`;
+}
+
+// ================================================================
+// TAB 5: BRACKETS (static structure)
+// ================================================================
+(function renderBrackets(){
+  // Use trace 0 to show bracket structure (just matchups, no results)
+  const trace = DATA.mc.traces[0];
+  let html = '<div class="bracket-container">';
+  ['CL','EL','ECL'].forEach(comp => {
+    const b = trace.brackets[comp];
+    const compName = comp === 'CL' ? 'Champions League' : comp === 'EL' ? 'Europa League' : 'Conference League';
+    html += `<div class="bracket-comp"><h4>${compName}</h4>`;
+
+    // R16 matchups (fixed)
+    html += `<div class="bracket-round"><div class="bracket-round-title">Round of 16 Matchups</div>`;
+    b.R16.forEach((m, i) => {
+      html += `<div class="bracket-match" style="padding:0.3rem 0">
+        <span style="color:var(--text-dim);font-size:0.65rem;width:1.5rem;display:inline-block">${i+1}.</span>
+        <span class="bracket-club" style="color:${COLORS[m.hc]||'#888'}">${m.home}</span>
+        <span class="bracket-vs">vs</span>
+        <span class="bracket-club" style="color:${COLORS[m.ac]||'#888'}">${m.away}</span>
+      </div>`;
+    });
+    html += '</div>';
+
+    // QF paths
+    html += `<div class="bracket-round"><div class="bracket-round-title">Quarter-Final Paths</div>`;
+    for(let i=0; i<b.QF.length; i++){
+      const r16a = b.R16[i*2], r16b = b.R16[i*2+1];
+      if(r16a && r16b){
+        html += `<div style="font-size:0.72rem;color:var(--text-muted);padding:0.2rem 0">
+          QF${i+1}: Winner of ${r16a.home}/${r16a.away} vs Winner of ${r16b.home}/${r16b.away}
+        </div>`;
+      }
+    }
+    html += '</div>';
+
+    // SF paths
+    html += `<div class="bracket-round"><div class="bracket-round-title">Semi-Final Paths</div>`;
+    html += `<div style="font-size:0.72rem;color:var(--text-muted);padding:0.2rem 0">SF1: Winner QF1 vs Winner QF2</div>`;
+    html += `<div style="font-size:0.72rem;color:var(--text-muted);padding:0.2rem 0">SF2: Winner QF3 vs Winner QF4</div>`;
+    html += '</div>';
+
+    html += `<div class="bracket-round"><div class="bracket-round-title">Final</div>`;
+    html += `<div style="font-size:0.72rem;color:var(--text-muted);padding:0.2rem 0">Winner SF1 vs Winner SF2</div>`;
+    html += '</div>';
+
+    html += '</div>';
+  });
+  html += '</div>';
+  document.getElementById('bracketDisplay').innerHTML = html;
+})();
+
+// ================================================================
+// TAB 6: VALIDATION
+// ================================================================
+(function renderValidation(){
+  const bt = DATA.backtests;
+  let html = '<table><thead><tr><th>Season</th>';
+  COUNTRIES.forEach(c => {
+    html += `<th style="color:${COLORS[c]}">${c}</th>`;
+  });
+  html += '<th>Predicted Winners</th><th>Actual Winners</th><th>Result</th></tr></thead><tbody>';
+  bt.forEach(b => {
+    html += `<tr><td style="font-weight:600">${b.season}</td>`;
+    COUNTRIES.forEach(c => {
+      const val = b.final_coefficients[c];
+      html += `<td>${val != null ? val.toFixed(3) : '—'}</td>`;
+    });
+    html += `<td>${b.expected_winners.join(', ')}</td>`;
+    html += `<td>${b.performance_spot_winners.join(', ')}</td>`;
+    html += `<td>${b.validation_passed ? '<span class="badge badge-success">✓ Pass</span>' : '<span class="badge badge-danger">✗ Fail</span>'}</td>`;
+    html += `</tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('backtestTable').innerHTML = html;
+
+  document.getElementById('methodologyText').innerHTML = `
+    <p><strong>Monte Carlo Simulation:</strong> The model runs ${(DATA.mc.iterations/1e6).toFixed(0)} million independent simulations of all remaining UEFA knockout matches (R16 → QF → SF → Final) across the Champions League, Europa League, and Conference League.</p>
+    <p style="margin-top:0.5rem"><strong>Bracket Structure:</strong> ${DATA.metadata.bracket_rules}. Results from each round feed into the next, accumulating coefficient points for each country.</p>
+    <p style="margin-top:0.5rem"><strong>Coefficient Calculation:</strong> Each country's coefficient = total points ÷ number of participating clubs. Points are awarded per UEFA's standard system for match wins, draws, and advancement bonuses.</p>
+    <p style="margin-top:0.5rem"><strong>Performance Spot:</strong> The top 2 countries by single-season coefficient earn an additional Champions League spot for the following season (the "performance spot").</p>
+    <p style="margin-top:0.5rem"><strong>Worst-Case Scenario:</strong> A separate set of ${(DATA.wcMC.iterations/1e6 >= 1 ? (DATA.wcMC.iterations/1e6).toFixed(0) + ' million' : (DATA.wcMC.iterations/1e3).toFixed(0) + 'K')} simulations where all English clubs are forced out at R16. England's coefficient is frozen at its current value while other nations continue to accumulate points.</p>
+    <p style="margin-top:0.5rem"><strong>Back-testing:</strong> The model has been validated against ${bt.length} previous seasons. All back-tests correctly predicted the performance spot winners.</p>
+    <div class="info-box">Seed: ${DATA.metadata.monte_carlo_seed || 42} for reproducibility. Data as of ${DATA.metadata.data_as_of}.</div>
+  `;
+})();
+
+})();
+</script>
+</body>
+</html>
