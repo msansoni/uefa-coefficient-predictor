@@ -542,7 +542,7 @@ function updateDashboard(res) {
   document.getElementById('eng-top2').textContent = res.england.staysTop2.toFixed(2) + '%';
   const risk = res.england.dropsOut;
   document.getElementById('eng-sub').textContent =
-    risk < 1 ? 'Very safe &mdash; risk of dropping: ' + risk.toFixed(2) + '%' :
+    risk < 1 ? 'Very safe – risk of dropping: ' + risk.toFixed(2) + '%' :
     risk < 10 ? 'Moderate risk of dropping: ' + risk.toFixed(2) + '%' :
     'High risk! Chance of dropping: ' + risk.toFixed(2) + '%';
 }
@@ -752,7 +752,7 @@ function populateQF(comp) {
       inputsEl.querySelectorAll('.score-input').forEach(inp=>{inp.removeEventListener('input',onScoreInput);inp.addEventListener('input',onScoreInput);});
       bracketState[id]={club1,club2};
     } else {
-      tbd1.style.display='flex'; tbd1.textContent='Waiting for R16 results&hellip;'; inputsEl.style.display='none';
+      tbd1.style.display='flex'; tbd1.textContent='Waiting for R16 results…'; inputsEl.style.display='none';
     }
   }
 }
@@ -780,7 +780,7 @@ function populateSF(comp) {
       inputsEl.querySelectorAll('.score-input').forEach(inp=>{inp.removeEventListener('input',onScoreInput);inp.addEventListener('input',onScoreInput);});
       bracketState[id]={club1:c1,club2:c2};
     } else {
-      tbd1.style.display='flex'; tbd1.textContent='Waiting for QF results&hellip;'; inputsEl.style.display='none';
+      tbd1.style.display='flex'; tbd1.textContent='Waiting for QF results…'; inputsEl.style.display='none';
     }
   }
 }
@@ -806,145 +806,84 @@ function populateFinal(comp) {
     inputsEl.querySelectorAll('.score-input').forEach(inp=>{inp.removeEventListener('input',onScoreInput);inp.addEventListener('input',onScoreInput);});
     bracketState[id]={club1:c1,club2:c2};
   } else {
-    tbd1.style.display='flex'; tbd1.textContent='Waiting for SF results&hellip;'; inputsEl.style.display='none';
+    tbd1.style.display='flex'; tbd1.textContent='Waiting for SF results…'; inputsEl.style.display='none';
   }
 }
 
-function updateWinnerStyling(tieId, winnerSide, isFinal) {
-  const sides = isFinal ? ['club1','club2'] : ['home','away'];
-  const card = document.getElementById('card-'+tieId);
-  sides.forEach(s => {
-    const row = document.getElementById('row-'+tieId+'-'+s);
-    if (!row) return;
-    row.classList.remove('winner','loser');
-    if (winnerSide) {
-      row.classList.add(s === winnerSide ? 'winner' : 'loser');
+function updateBracket(comp) {
+  populateQF(comp);
+  populateSF(comp);
+  populateFinal(comp);
+  updateWinnerStyles(comp);
+}
+
+function updateWinnerStyles(comp) {
+  const allTies = [
+    ...R16_TIES[comp].map(t => ({id: t.id, type: 'r16', tieObj: t})),
+    ...[0,1,2,3].map(i => ({id: `${comp}-QF-${i}`, type: 'two', tieObj: null})),
+    ...[0,1].map(i => ({id: `${comp}-SF-${i}`, type: 'two', tieObj: null})),
+    {id: `${comp}-F`, type: 'final', tieObj: null}
+  ];
+  allTies.forEach(({id, type, tieObj}) => {
+    const card = document.getElementById('card-'+id);
+    if (!card) return;
+    let winner = null, loser = null;
+    if (type==='r16' && tieObj) {
+      const ur = userResults[id];
+      if (ur && ur.sl_hg !== undefined && ur.sl_ag !== undefined) {
+        const homeAgg = tieObj.fl_hg + ur.sl_ag;
+        const awayAgg = tieObj.fl_ag + ur.sl_hg;
+        if (homeAgg > awayAgg) { winner='home'; loser='away'; }
+        else if (awayAgg > homeAgg) { winner='away'; loser='home'; }
+        else if (ur.penWinner) { winner=ur.penWinner; loser=ur.penWinner==='home'?'away':'home'; }
+      }
+    } else if (type==='two') {
+      const st = bracketState[id];
+      if (st) {
+        const w = getTwoLegWinner(id, st.club1, st.club2);
+        if (w) { winner = w===st.club1?'club1':'club2'; loser = winner==='club1'?'club2':'club1'; }
+      }
+    } else if (type==='final') {
+      const st = bracketState[id];
+      if (st) {
+        const w = getFinalWinner(id, st.club1, st.club2);
+        if (w) { winner = w===st.club1?'club1':'club2'; loser = winner==='club1'?'club2':'club1'; }
+      }
     }
-  });
-  if (card) card.classList.toggle('decided', !!winnerSide);
-}
-
-function updateAggDisplay(tieId, tie, ur) {
-  const aggEl = document.getElementById('agg-'+tieId);
-  if (!aggEl) return;
-  if (ur && ur.sl_hg !== undefined && ur.sl_ag !== undefined) {
-    const homeAgg = tie.fl_hg + ur.sl_ag;
-    const awayAgg = tie.fl_ag + ur.sl_hg;
-    aggEl.textContent = `Agg: ${homeAgg}–${awayAgg}`;
-  } else {
-    aggEl.textContent = '';
-  }
-}
-
-function updateTwoLegAggDisplay(tieId, ur) {
-  const aggEl = document.getElementById('agg-'+tieId);
-  if (!aggEl) return;
-  if (ur && ur.fl_hg !== undefined && ur.fl_ag !== undefined && ur.sl_hg !== undefined && ur.sl_ag !== undefined) {
-    const c1Agg = ur.fl_hg + ur.sl_ag;
-    const c2Agg = ur.fl_ag + ur.sl_hg;
-    aggEl.textContent = `Agg: ${c1Agg}–${c2Agg}`;
-  } else {
-    aggEl.textContent = '';
-  }
-}
-
-function pickPenalty(btn) {
-  const tieId = btn.dataset.tie;
-  const pick = btn.dataset.pick;
-  if (!userResults[tieId]) userResults[tieId] = {};
-  if (userResults[tieId].penWinner === pick) {
-    delete userResults[tieId].penWinner;
-    btn.closest('.pen-area').querySelectorAll('.pen-btn').forEach(b => b.classList.remove('selected'));
-  } else {
-    userResults[tieId].penWinner = pick;
-    btn.closest('.pen-area').querySelectorAll('.pen-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-  }
-  refreshBracket();
-  debounceMC();
-}
-
-function refreshR16(comp) {
-  R16_TIES[comp].forEach((tie) => {
-    const ur = userResults[tie.id];
-    if (ur && ur.sl_hg !== undefined && ur.sl_ag !== undefined) {
-      const homeAgg = tie.fl_hg + ur.sl_ag;
-      const awayAgg = tie.fl_ag + ur.sl_hg;
-      let winnerSide = null;
-      if (homeAgg > awayAgg) winnerSide = 'home';
-      else if (awayAgg > homeAgg) winnerSide = 'away';
-      else if (ur.penWinner) winnerSide = ur.penWinner;
-      updateWinnerStyling(tie.id, winnerSide, false);
-      updateAggDisplay(tie.id, tie, ur);
-      const penArea = document.getElementById('pen-'+tie.id);
-      if (penArea) penArea.style.display = (homeAgg === awayAgg && ur.sl_hg !== undefined) ? 'block' : 'none';
-    } else {
-      updateWinnerStyling(tie.id, null, false);
-      updateAggDisplay(tie.id, tie, ur);
-      const penArea = document.getElementById('pen-'+tie.id);
-      if (penArea) penArea.style.display = 'none';
+    const winnerSide = winner ? (type==='r16' ? winner : winner) : null;
+    const loserSide = loser ? (type==='r16' ? loser : loser) : null;
+    card.querySelectorAll('.club-row').forEach(row => {
+      row.classList.remove('winner','loser');
+      if (winnerSide && row.dataset.side === winnerSide) row.classList.add('winner');
+      if (loserSide && row.dataset.side === loserSide) row.classList.add('loser');
+    });
+    const decided = winner !== null;
+    card.classList.toggle('decided', decided);
+    const aggEl = document.getElementById('agg-'+id);
+    if (aggEl) {
+      if (type==='r16' && tieObj) {
+        const ur = userResults[id];
+        if (ur && ur.sl_hg !== undefined && ur.sl_ag !== undefined) {
+          const hAgg = tieObj.fl_hg + ur.sl_ag;
+          const aAgg = tieObj.fl_ag + ur.sl_hg;
+          aggEl.textContent = `${tieObj.home.split(' ').pop()} ${hAgg}–${aAgg} ${tieObj.away.split(' ').pop()}`;
+        } else aggEl.textContent = '';
+      } else if (type==='two') {
+        const ur = userResults[id];
+        const st = bracketState[id];
+        if (ur && st && ur.fl_hg !== undefined && ur.fl_ag !== undefined && ur.sl_hg !== undefined && ur.sl_ag !== undefined) {
+          const c1Agg = ur.fl_hg + ur.sl_ag;
+          const c2Agg = ur.fl_ag + ur.sl_hg;
+          aggEl.textContent = `${st.club1.club.split(' ').pop()} ${c1Agg}–${c2Agg} ${st.club2.club.split(' ').pop()}`;
+        } else aggEl.textContent = '';
+      } else if (type==='final') {
+        const ur = userResults[id];
+        const st = bracketState[id];
+        if (ur && st && ur.g1 !== undefined && ur.g2 !== undefined) {
+          aggEl.textContent = `${st.club1.club.split(' ').pop()} ${ur.g1}–${ur.g2} ${st.club2.club.split(' ').pop()}`;
+        } else aggEl.textContent = '';
+      }
     }
-  });
-}
-
-function refreshTwoLeg(comp, round, count) {
-  for (let i=0;i<count;i++) {
-    const id=`${comp}-${round}-${i}`;
-    const st=bracketState[id];
-    if (!st) continue;
-    const ur=userResults[id]||{};
-    updateTwoLegAggDisplay(id, ur);
-    const c1Agg=(ur.fl_hg!==undefined&&ur.sl_ag!==undefined)?(ur.fl_hg+ur.sl_ag):null;
-    const c2Agg=(ur.fl_ag!==undefined&&ur.sl_hg!==undefined)?(ur.fl_ag+ur.sl_hg):null;
-    let winnerSide=null;
-    if (c1Agg!==null&&c2Agg!==null) {
-      if (c1Agg>c2Agg) winnerSide='club1';
-      else if (c2Agg>c1Agg) winnerSide='club2';
-      else if (ur.penWinner) winnerSide=ur.penWinner;
-    }
-    updateWinnerStyling(id, winnerSide, false);
-    const penArea=document.getElementById('pen-'+id);
-    if (penArea) penArea.style.display=(c1Agg!==null&&c1Agg===c2Agg&&ur.fl_hg!==undefined)?'block':'none';
-  }
-}
-
-function refreshFinal(comp) {
-  const id=`${comp}-F`;
-  const st=bracketState[id];
-  if (!st) return;
-  const ur=userResults[id]||{};
-  const aggEl=document.getElementById('agg-'+id);
-  if (aggEl) aggEl.textContent=(ur.g1!==undefined&&ur.g2!==undefined)?`${ur.g1}–${ur.g2}`:'';
-  let winnerSide=null;
-  if (ur.g1!==undefined&&ur.g2!==undefined) {
-    if (ur.g1>ur.g2) winnerSide='club1';
-    else if (ur.g2>ur.g1) winnerSide='club2';
-    else if (ur.penWinner) winnerSide=ur.penWinner;
-  }
-  updateWinnerStyling(id, winnerSide, true);
-  const penArea=document.getElementById('pen-'+id);
-  if (penArea) penArea.style.display=(ur.g1!==undefined&&ur.g1===ur.g2)?'block':'none';
-}
-
-function refreshBracket() {
-  ['CL','EL','ECL'].forEach(comp => {
-    refreshR16(comp);
-    populateQF(comp);
-    refreshTwoLeg(comp,'QF',4);
-    populateSF(comp);
-    refreshTwoLeg(comp,'SF',2);
-    populateFinal(comp);
-    refreshFinal(comp);
-  });
-  updateStandings();
-}
-
-function restoreInputs(tieId) {
-  const ur = userResults[tieId];
-  if (!ur) return;
-  document.querySelectorAll(`[data-tie="${tieId}"]`).forEach(inp => {
-    const field = inp.dataset.field;
-    if (field && ur[field] !== undefined) inp.value = ur[field];
   });
 }
 
@@ -952,163 +891,110 @@ function onScoreInput(e) {
   const inp = e.target;
   const tieId = inp.dataset.tie;
   const field = inp.dataset.field;
-  if (!tieId || !field) return;
-  if (!userResults[tieId]) userResults[tieId] = {};
   const val = inp.value.trim();
-  if (val === '' || isNaN(parseInt(val))) {
+  if (!userResults[tieId]) userResults[tieId] = {};
+  if (val === '') {
     delete userResults[tieId][field];
   } else {
-    userResults[tieId][field] = parseInt(val);
+    const n = parseInt(val, 10);
+    if (!isNaN(n) && n >= 0) userResults[tieId][field] = n;
   }
-  refreshBracket();
-  debounceMC();
-}
-
-document.addEventListener('input', e => {
-  if (e.target.classList.contains('score-input')) onScoreInput(e);
-});
-
-document.querySelectorAll('.comp-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.comp-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.bracket-container').forEach(b => b.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById('bracket-' + tab.dataset.comp).classList.add('active');
-  });
-});
-
-function computeConfirmedPts() {
-  const confirmed = {};
-  TRACKED.forEach(c => confirmed[c] = 0);
-  ['CL','EL','ECL'].forEach(comp => {
-    const bonus = ROUND_BONUS[comp];
-    R16_TIES[comp].forEach(tie => {
-      const ur = userResults[tie.id];
-      if (!ur) return;
-      if (ur.sl_hg !== undefined && ur.sl_ag !== undefined) {
-        if (TRACKED.includes(tie.ac)) confirmed[tie.ac] += matchPts(ur.sl_hg, ur.sl_ag);
-        if (TRACKED.includes(tie.hc)) confirmed[tie.hc] += matchPts(ur.sl_ag, ur.sl_hg);
-      }
-      const homeAgg = tie.fl_hg + (ur.sl_ag||0);
-      const awayAgg = tie.fl_ag + (ur.sl_hg||0);
-      let winnerCountry = null;
-      if (homeAgg > awayAgg) winnerCountry = tie.hc;
-      else if (awayAgg > homeAgg) winnerCountry = tie.ac;
-      else if (ur.penWinner === 'home') winnerCountry = tie.hc;
-      else if (ur.penWinner === 'away') winnerCountry = tie.ac;
-      if (winnerCountry && TRACKED.includes(winnerCountry) && ur.sl_hg !== undefined) confirmed[winnerCountry] += bonus;
-    });
-    for (let round of ['QF','SF']) {
-      const count = round==='QF'?4:2;
-      for (let i=0;i<count;i++) {
-        const id=`${comp}-${round}-${i}`;
-        const ur=userResults[id]; if(!ur) continue;
-        const st=bracketState[id]; if(!st) continue;
-        if(ur.fl_hg!==undefined&&ur.fl_ag!==undefined){if(TRACKED.includes(st.club1.country)) confirmed[st.club1.country]+=matchPts(ur.fl_hg,ur.fl_ag);if(TRACKED.includes(st.club2.country)) confirmed[st.club2.country]+=matchPts(ur.fl_ag,ur.fl_hg);}
-        if(ur.sl_hg!==undefined&&ur.sl_ag!==undefined){if(TRACKED.includes(st.club2.country)) confirmed[st.club2.country]+=matchPts(ur.sl_hg,ur.sl_ag);if(TRACKED.includes(st.club1.country)) confirmed[st.club1.country]+=matchPts(ur.sl_ag,ur.sl_hg);}
-        const c1a=(ur.fl_hg!==undefined&&ur.sl_ag!==undefined)?(ur.fl_hg+ur.sl_ag):null;
-        const c2a=(ur.fl_ag!==undefined&&ur.sl_hg!==undefined)?(ur.fl_ag+ur.sl_hg):null;
-        let wc=null;
-        if(c1a!==null&&c2a!==null){if(c1a>c2a)wc=st.club1.country;else if(c2a>c1a)wc=st.club2.country;else if(ur.penWinner==='club1')wc=st.club1.country;else if(ur.penWinner==='club2')wc=st.club2.country;}
-        if(wc&&TRACKED.includes(wc)&&ur.fl_hg!==undefined&&ur.sl_hg!==undefined) confirmed[wc]+=bonus;
-      }
-    }
-    const fid=`${comp}-F`; const fur=userResults[fid]; const fst=bracketState[fid];
-    if(fur&&fst){
-      if(fur.g1!==undefined&&fur.g2!==undefined){if(TRACKED.includes(fst.club1.country)) confirmed[fst.club1.country]+=matchPts(fur.g1,fur.g2);if(TRACKED.includes(fst.club2.country)) confirmed[fst.club2.country]+=matchPts(fur.g2,fur.g1);}
-      let wc=null;
-      if(fur.g1!==undefined&&fur.g2!==undefined){if(fur.g1>fur.g2)wc=fst.club1.country;else if(fur.g2>fur.g1)wc=fst.club2.country;else if(fur.penWinner==='club1')wc=fst.club1.country;else if(fur.penWinner==='club2')wc=fst.club2.country;}
-      if(wc&&TRACKED.includes(wc)&&fur.g1!==undefined) confirmed[wc]+=bonus;
-    }
-  });
-  return confirmed;
-}
-
-function updateStandings() {
-  const confirmed = computeConfirmedPts();
-  const tbody = document.getElementById('standings-body');
-  const rows = TRACKED.map(c => ({
-    country: c,
-    current: CURRENT_PTS[c],
-    confirmed: confirmed[c] || 0,
-    clubs: NUM_CLUBS[c],
-    mean: mcResult ? mcResult.mean[c] : null,
-    top2: mcResult ? mcResult.top2[c] : null,
-    p5: mcResult ? mcResult.percentiles[c].p5 : null,
-    p95: mcResult ? mcResult.percentiles[c].p95 : null,
-    p25: mcResult ? mcResult.percentiles[c].p25 : null,
-    p75: mcResult ? mcResult.percentiles[c].p75 : null,
-    p50: mcResult ? mcResult.percentiles[c].p50 : null,
-  }));
-  rows.sort((a, b) => {
-    const aCoeff = mcResult ? a.mean : (a.current + a.confirmed) / a.clubs;
-    const bCoeff = mcResult ? b.mean : (b.current + b.confirmed) / b.clubs;
-    return bCoeff - aCoeff;
-  });
-  const globalMin = mcResult ? Math.min(...TRACKED.map(c => mcResult.percentiles[c].p5)) : 14;
-  const globalMax = mcResult ? Math.max(...TRACKED.map(c => mcResult.percentiles[c].p95)) : 35;
-  const range = globalMax - globalMin || 1;
-  tbody.innerHTML = rows.map((r, i) => {
-    const clr = COUNTRY_COLORS[r.country];
-    const confirmedCoeff = (r.current + r.confirmed) / r.clubs;
-    let rangeHTML = '';
-    if (r.p5 !== null) {
-      const p5pct = ((r.p5 - globalMin) / range * 100).toFixed(1);
-      const p95pct = ((r.p95 - globalMin) / range * 100).toFixed(1);
-      const p25pct = ((r.p25 - globalMin) / range * 100).toFixed(1);
-      const p75pct = ((r.p75 - globalMin) / range * 100).toFixed(1);
-      const medpct = ((r.p50 - globalMin) / range * 100).toFixed(1);
-      const widthFull = (parseFloat(p95pct) - parseFloat(p5pct)).toFixed(1);
-      const widthIqr = (parseFloat(p75pct) - parseFloat(p25pct)).toFixed(1);
-      rangeHTML = `
-        <div class="range-bar-wrap">
-          <div class="range-bar" style="left:${p5pct}%;width:${widthFull}%;background:${clr}"></div>
-          <div class="range-iqr" style="left:${p25pct}%;width:${widthIqr}%;background:${clr}"></div>
-          <div class="range-median" style="left:${medpct}%;background:${clr}"></div>
-        </div>
-        <span class="range-label">${r.p5.toFixed(2)}–${r.p95.toFixed(2)}</span>`;
+  saveState();
+  const comp = tieId.startsWith('CL') ? 'CL' : tieId.startsWith('EL') ? 'EL' : 'ECL';
+  const penAreaEl = document.getElementById('pen-' + tieId);
+  if (penAreaEl) {
+    const r16tie = R16_TIES[comp].find(t => t.id === tieId);
+    if (r16tie) {
+      const ur = userResults[tieId] || {};
+      const hAgg = r16tie.fl_hg + (ur.sl_ag||0);
+      const aAgg = r16tie.fl_ag + (ur.sl_hg||0);
+      const showPen = ur.sl_hg !== undefined && ur.sl_ag !== undefined && hAgg === aAgg;
+      penAreaEl.style.display = showPen ? 'block' : 'none';
     } else {
-      rangeHTML = `<span style="color:var(--text-muted);font-size:0.7rem">Run simulation</span>`;
+      const ur = userResults[tieId] || {};
+      const hasAllInputs = ur.fl_hg !== undefined && ur.fl_ag !== undefined && ur.sl_hg !== undefined && ur.sl_ag !== undefined;
+      if (hasAllInputs) {
+        const c1Agg = ur.fl_hg + ur.sl_ag;
+        const c2Agg = ur.fl_ag + ur.sl_hg;
+        penAreaEl.style.display = (c1Agg === c2Agg) ? 'block' : 'none';
+      } else penAreaEl.style.display = 'none';
     }
-    const top2disp = r.top2 !== null ? `<span class="top2-pct" style="color:${clr}">${r.top2.toFixed(1)}%</span>` : '&mdash;';
-    return `<tr class="${i < 2 ? 'top2-row' : ''}">
-      <td class="rank-cell ${i < 2 ? 'top' : ''}">${i+1}</td>
-      <td><div class="nation-cell"><img src="${getFlag(r.country)}" alt="${r.country}"><div><div class="name">${r.country}</div><div class="clubs">${r.clubs} clubs</div></div></div></td>
-      <td class="num coeff-current">${(r.current/r.clubs).toFixed(3)}</td>
-      <td class="num coeff-confirmed">${confirmedCoeff.toFixed(3)}</td>
-      <td class="num">${r.mean !== null ? r.mean.toFixed(3) : '&mdash;'}</td>
-      <td><div class="range-cell">${rangeHTML}</div></td>
-      <td class="num">${top2disp}</td>
-    </tr>`;
-  }).join('');
+  }
+  const finalId = `${comp}-F`;
+  if (tieId === finalId) {
+    const ur = userResults[tieId] || {};
+    const penArea = document.getElementById('pen-' + tieId);
+    if (penArea) {
+      const hasScores = ur.g1 !== undefined && ur.g2 !== undefined;
+      penArea.style.display = (hasScores && ur.g1 === ur.g2) ? 'block' : 'none';
+    }
+  }
+  updateBracket(comp);
+  scheduleDebounce();
 }
 
-function triggerMC(iterations) {
+function pickPenalty(btn) {
+  const tieId = btn.dataset.tie;
+  const pick = btn.dataset.pick;
+  if (!userResults[tieId]) userResults[tieId] = {};
+  const already = userResults[tieId].penWinner === pick;
+  userResults[tieId].penWinner = already ? undefined : pick;
+  const area = document.getElementById('pen-'+tieId);
+  area.querySelectorAll('.pen-btn').forEach(b => b.classList.remove('selected'));
+  if (!already) btn.classList.add('selected');
+  saveState();
+  const comp = tieId.startsWith('CL') ? 'CL' : tieId.startsWith('EL') ? 'EL' : 'ECL';
+  updateBracket(comp);
+  scheduleDebounce();
+}
+
+function restoreInputs(tieId) {
+  const ur = userResults[tieId];
+  if (!ur) return;
+  document.querySelectorAll(`[data-tie="${tieId}"]`).forEach(inp => {
+    if (inp.tagName === 'INPUT') {
+      const v = ur[inp.dataset.field];
+      if (v !== undefined) inp.value = v;
+    }
+  });
+  const penArea = document.getElementById('pen-'+tieId);
+  if (penArea && ur.penWinner) {
+    penArea.querySelectorAll('.pen-btn').forEach(b => {
+      if (b.dataset.pick === ur.penWinner) b.classList.add('selected');
+    });
+  }
+}
+
+function saveState() {
+  try { localStorage.setItem('uefaState', JSON.stringify(userResults)); } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const s = localStorage.getItem('uefaState');
+    if (s) Object.assign(userResults, JSON.parse(s));
+  } catch(e) {}
+}
+
+function scheduleDebounce() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => triggerMC(10000), 800);
+}
+
+function triggerMC(n) {
+  if (mcWorker) { mcWorker.terminate(); mcWorker = null; }
   const btn = document.getElementById('run-btn');
   const status = document.getElementById('sim-status');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Running...';
-  status.textContent = '';
-  if (mcWorker) { mcWorker.terminate(); mcWorker = null; }
+  btn.innerHTML = '<span class="spinner"></span>Running…';
+  status.textContent = `Running ${n.toLocaleString()} simulations…`;
+  const fixedResults = buildFixedResults();
   const workerCode = `
-    ${poissonSample.toString()}
-    ${matchPts.toString()}
-    ${tieWinner.toString()}
-    ${simR16SecondLeg.toString()}
-    ${simTwoLeggedTie.toString()}
-    ${simFinal.toString()}
-    ${runMonteCarlo.toString()}
-    const WIN_PTS=${WIN_PTS},DRAW_PTS=${DRAW_PTS},LOSS_PTS=${LOSS_PTS};
-    const ROUND_BONUS=${JSON.stringify(ROUND_BONUS)};
-    const TRACKED=${JSON.stringify(TRACKED)};
-    const NUM_CLUBS=${JSON.stringify(NUM_CLUBS)};
-    const CURRENT_PTS=${JSON.stringify(CURRENT_PTS)};
-    const QF_BRACKET=${JSON.stringify(QF_BRACKET)};
-    const SF_BRACKET=${JSON.stringify(SF_BRACKET)};
-    const R16_TIES=${JSON.stringify(R16_TIES)};
-    onmessage = function(e) {
-      const result = runMonteCarlo(e.data.userResults, e.data.iterations);
-      postMessage(result);
+    importScripts('engine.js', 'clubs.js');
+    self.onmessage = function(e) {
+      const {n, fixedResults} = e.data;
+      const result = runMC(n, fixedResults);
+      self.postMessage(result);
     };
   `;
   const blob = new Blob([workerCode], {type:'application/javascript'});
@@ -1116,89 +1002,178 @@ function triggerMC(iterations) {
   mcWorker.onmessage = function(e) {
     mcResult = e.data;
     updateDashboard(mcResult);
-    updateStandings();
-    drawDistChart(mcResult);
-    drawOvertakeTable(mcResult);
+    renderStandings(mcResult);
+    renderCharts(mcResult);
     btn.disabled = false;
-    btn.textContent = 'Run 100K Simulations';
-    status.textContent = `${mcResult.iterations.toLocaleString()} simulations complete`;
+    btn.innerHTML = 'Run 100K Simulations';
+    status.textContent = `Done — ${n.toLocaleString()} simulations completed`;
     mcWorker = null;
   };
   mcWorker.onerror = function(err) {
     console.error('Worker error:', err);
     btn.disabled = false;
-    btn.textContent = 'Run 100K Simulations';
+    btn.innerHTML = 'Run 100K Simulations';
     status.textContent = 'Error running simulation';
     mcWorker = null;
   };
-  mcWorker.postMessage({ userResults: JSON.parse(JSON.stringify(userResults)), iterations });
+  mcWorker.postMessage({n, fixedResults});
 }
 
-function debounceMC() {
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => triggerMC(50000), 800);
+function buildFixedResults() {
+  const fixed = {};
+  ['CL','EL','ECL'].forEach(comp => {
+    R16_TIES[comp].forEach(tie => {
+      const ur = userResults[tie.id];
+      if (ur && ur.sl_hg !== undefined && ur.sl_ag !== undefined) {
+        const homeAgg = tie.fl_hg + ur.sl_ag;
+        const awayAgg = tie.fl_ag + ur.sl_hg;
+        if (homeAgg > awayAgg) fixed[tie.id] = tie.home;
+        else if (awayAgg > homeAgg) fixed[tie.id] = tie.away;
+        else if (ur.penWinner === 'home') fixed[tie.id] = tie.home;
+        else if (ur.penWinner === 'away') fixed[tie.id] = tie.away;
+      }
+    });
+    for (let i=0;i<4;i++) {
+      const id=`${comp}-QF-${i}`;
+      const st=bracketState[id];
+      if (st) { const w=getTwoLegWinner(id,st.club1,st.club2); if (w) fixed[id]=w.club; }
+    }
+    for (let i=0;i<2;i++) {
+      const id=`${comp}-SF-${i}`;
+      const st=bracketState[id];
+      if (st) { const w=getTwoLegWinner(id,st.club1,st.club2); if (w) fixed[id]=w.club; }
+    }
+    const fid=`${comp}-F`;
+    const fst=bracketState[fid];
+    if (fst) { const w=getFinalWinner(fid,fst.club1,fst.club2); if (w) fixed[fid]=w.club; }
+  });
+  return fixed;
+}
+
+function renderStandings(res) {
+  const body = document.getElementById('standings-body');
+  const sorted = [...TRACKED].sort((a,b) => (res.mean[b]||0)-(res.mean[a]||0));
+  const globalMin = Math.min(...sorted.map(c => res.p10[c]||0));
+  const globalMax = Math.max(...sorted.map(c => res.p90[c]||0));
+  const rangeSpan = globalMax - globalMin || 1;
+  body.innerHTML = sorted.map((c, idx) => {
+    const clr = COUNTRY_COLORS[c];
+    const confirmedDelta = r.confirmed / r.clubs;
+    const confirmedDisp = confirmedDelta > 0 ? `+${confirmedDelta.toFixed(3)}` : '—';
+    let rangeHTML = '';
+    if (res.p10[c] !== undefined) {
+      const p10 = res.p10[c], p25 = res.p25[c], p75 = res.p75[c], p90 = res.p90[c], med = res.median[c];
+      const toP = v => ((v - globalMin) / rangeSpan * 100).toFixed(1);
+      rangeHTML = `
+        <div class="range-bar-wrap">
+          <div class="range-bar" style="left:${toP(p10)}%;width:${(toP(p90)-toP(p10)).toFixed(1)}%;background:${clr}"></div>
+          <div class="range-iqr" style="left:${toP(p25)}%;width:${(toP(p75)-toP(p25)).toFixed(1)}%;background:${clr}"></div>
+          <div class="range-median" style="left:${toP(med)}%;background:${clr}"></div>
+        </div>
+        <span class="range-label">${res.p10[c].toFixed(2)}–${res.p90[c].toFixed(2)}</span>`;
+    }
+    const pct = res.top2[c];
+    const pctClr = pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--yellow)' : 'var(--red)';
+    const isTop2 = idx < 2;
+    return `
+      <tr class="${isTop2?'top2-row':''}">
+        <td class="rank-cell ${isTop2?'top':''}">${idx+1}</td>
+        <td>
+          <div class="nation-cell">
+            <img src="${getFlag(c)}" alt="${c}">
+            <div><div class="name">${c}</div><div class="clubs">${getNationClubs(c, res)}</div></div>
+          </div>
+        </td>
+        <td class="num coeff-current">${(res.base[c]||0).toFixed(3)}</td>
+        <td class="num coeff-confirmed">${confirmedDisp}</td>
+        <td class="num">${res.mean[c].toFixed(3)}</td>
+        <td class="range-cell">${rangeHTML}</td>
+        <td class="num top2-pct" style="color:${pctClr}">${pct.toFixed(1)}%</td>
+      </tr>`;
+  }).join('');
+}
+
+function getNationClubs(country, res) {
+  if (!res.clubs) return '';
+  const clubs = res.clubs[country];
+  if (!clubs || clubs.length === 0) return '';
+  return clubs.slice(0,3).join(', ') + (clubs.length > 3 ? ` +${clubs.length-3}` : '');
 }
 
 let distChart = null;
-function drawDistChart(res) {
+let distData = null;
+
+function renderCharts(res) {
   const ctx = document.getElementById('distChart').getContext('2d');
-  if (distChart) distChart.destroy();
+  const bins = res.bins || {};
   const datasets = TRACKED.map(c => ({
     label: c,
-    data: res.dist[c],
+    data: (bins[c]||[]).map((v,i) => ({x: res.binEdges[i], y: v})),
     borderColor: COUNTRY_COLORS[c],
     backgroundColor: COUNTRY_COLORS[c] + '22',
-    borderWidth: 2,
-    pointRadius: 0,
-    tension: 0.3,
-    fill: false,
+    borderWidth: 2, fill: false, tension: 0.4, pointRadius: 0
   }));
+  if (distChart) distChart.destroy();
   distChart = new Chart(ctx, {
     type: 'line',
     data: { datasets },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      parsing: { xAxisKey: 'x', yAxisKey: 'y' },
-      plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } }, tooltip: { mode: 'index', intersect: false } },
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } },
       scales: {
-        x: { type: 'linear', title: { display: true, text: 'Coefficient', color: '#64748b' }, grid: { color: '#1e293b' }, ticks: { color: '#64748b' } },
-        y: { title: { display: true, text: '% of simulations', color: '#64748b' }, grid: { color: '#1e293b' }, ticks: { color: '#64748b' } }
+        x: { type: 'linear', title: { display: true, text: 'Final Coefficient', color: '#64748b' }, ticks: { color: '#64748b' }, grid: { color: '#1e293b' } },
+        y: { title: { display: true, text: 'Frequency', color: '#64748b' }, ticks: { color: '#64748b' }, grid: { color: '#1e293b' } }
       }
     }
   });
+  renderOvertake(res);
 }
 
-function drawOvertakeTable(res) {
+function renderOvertake(res) {
   const wrap = document.getElementById('overtake-wrap');
-  const ot = res.england.overtake;
-  const pt = res.england.pairOvertake;
-  let html = `<table class="overtake-table"><thead><tr><th>Scenario</th><th style="text-align:right">Probability</th></tr></thead><tbody>`;
-  html += `<tr><td>England stays top 2</td><td style="text-align:right;color:var(--green);font-weight:700">${res.england.staysTop2.toFixed(2)}%</td></tr>`;
-  Object.entries(ot).sort((a,b)=>b[1]-a[1]).forEach(([c,pct])=>{
-    html += `<tr><td>${c} overtakes England</td><td style="text-align:right;color:${COUNTRY_COLORS[c]};font-weight:600">${pct.toFixed(2)}%</td></tr>`;
-  });
-  if (Object.keys(pt).length > 0) {
-    html += `<tr><td colspan="2" style="padding-top:8px;font-weight:700;font-size:0.7rem;text-transform:uppercase;color:var(--text-muted)">England drops out (both overtake)</td></tr>`;
-    Object.entries(pt).sort((a,b)=>b[1]-a[1]).forEach(([pair,pct])=>{
-      html += `<tr><td style="padding-left:12px">${pair}</td><td style="text-align:right;font-weight:600">${pct.toFixed(2)}%</td></tr>`;
+  if (!res.overtake) { wrap.innerHTML = '<p style="color:var(--text-muted);font-size:0.75rem">Run simulations to see overtake probabilities.</p>'; return; }
+  let html = `<table class="overtake-table"><thead><tr><th>Nation</th><th>Overtakes</th><th>Probability</th></tr></thead><tbody>`;
+  const rows = [];
+  TRACKED.forEach(c => {
+    TRACKED.forEach(t => {
+      if (c !== t && res.overtake[c] && res.overtake[c][t] !== undefined) {
+        rows.push({from:c, to:t, pct: res.overtake[c][t]});
+      }
     });
-  }
-  html += `</tbody></table>`;
+  });
+  rows.sort((a,b) => b.pct - a.pct);
+  rows.slice(0,8).forEach(r => {
+    const clr = COUNTRY_COLORS[r.from];
+    html += `<tr><td style="color:${clr};font-weight:600">${r.from}</td><td>${r.to}</td><td style="color:${clr};font-weight:700">${r.pct.toFixed(1)}%</td></tr>`;
+  });
+  html += '</tbody></table>';
   wrap.innerHTML = html;
 }
 
+document.querySelectorAll('.comp-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.comp-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.bracket-container').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('bracket-' + tab.dataset.comp).classList.add('active');
+  });
+});
+
+loadState();
 buildDashboard();
 buildAllBrackets();
-updateStandings();
-document.querySelectorAll('.score-input').forEach(inp => {
-  inp.addEventListener('input', onScoreInput);
+['CL','EL','ECL'].forEach(comp => {
+  document.querySelectorAll(`#bracket-${comp} .score-input`).forEach(inp => {
+    inp.addEventListener('input', onScoreInput);
+  });
+  R16_TIES[comp].forEach(tie => restoreInputs(tie.id));
+  updateBracket(comp);
 });
-triggerMC(100000);
+triggerMC(10000);
 </script>
 
 <footer>
-  UEFA coefficient data is approximate. Simulation uses Poisson model. <a href="https://github.com/msansoni/uefa-coefficient-predictor" target="_blank">GitHub</a>
+  <p>Built for UEFA coefficient analysis &mdash; Data from <a href="https://www.uefa.com/memberassociations/uefarankings/country/" target="_blank">UEFA.com</a> &bull; Source on <a href="https://github.com/msansoni/uefa-coefficient-predictor" target="_blank">GitHub</a></p>
 </footer>
 
 </body>
