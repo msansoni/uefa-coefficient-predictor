@@ -1,1 +1,94 @@
-will_be_replaced
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UEFA Coefficient Bracket Predictor 2025/26</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="header">
+  <h1>UEFA Coefficient Bracket Predictor</h1>
+  <p>2025/26 Season — Interactive Monte Carlo Simulation</p>
+</div>
+
+<!-- Probability Dashboard -->
+<div class="dashboard" id="dashboard"></div>
+
+<div class="callout" id="callout">
+  <div class="callout-label">England stays in top 2</div>
+  <div class="callout-value" id="eng-top2">—</div>
+  <div class="callout-sub" id="eng-sub">Loading simulations&hellip;</div>
+</div>
+
+<!-- Coefficient Standings -->
+<div class="standings-section">
+  <div class="standings-card">
+    <div class="standings-header">
+      <h3>Coefficient Standings</h3>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--text-secondary)"></span> Current</span>
+        <span><span class="dot" style="background:var(--green)"></span> Confirmed</span>
+        <span><span class="dot" style="background:#4f8fff;opacity:0.6"></span> Projected Range (MC)</span>
+      </div>
+    </div>
+    <table class="standings-table">
+      <thead>
+        <tr>
+          <th style="width:30px">#</th>
+          <th>Nation</th>
+          <th class="num">Current</th>
+          <th class="num">+Confirmed</th>
+          <th class="num">Projected Coeff</th>
+          <th style="min-width:180px">Simulation Range</th>
+          <th class="num">Top 2</th>
+        </tr>
+      </thead>
+      <tbody id="standings-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Competition Tabs -->
+<div class="comp-tabs">
+  <div class="comp-tab active" data-comp="CL">Champions League</div>
+  <div class="comp-tab" data-comp="EL">Europa League</div>
+  <div class="comp-tab" data-comp="ECL">Conference League</div>
+</div>
+
+<!-- Brackets -->
+<div class="bracket-wrap">
+  <div class="bracket-container active" id="bracket-CL"></div>
+  <div class="bracket-container" id="bracket-EL"></div>
+  <div class="bracket-container" id="bracket-ECL"></div>
+</div>
+
+<!-- Run MC -->
+<div class="run-section">
+  <button class="run-btn" id="run-btn" onclick="triggerMC(100000)">Run 100K Simulations</button>
+  <div class="sim-status" id="sim-status"></div>
+</div>
+
+<!-- Charts -->
+<div class="charts-section">
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h3>Coefficient Distribution</h3>
+      <div class="chart-canvas-wrap"><canvas id="distChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Overtake Probabilities</h3>
+      <div id="overtake-wrap" style="overflow-x:auto;"></div>
+    </div>
+  </div>
+</div>
+
+<script src="clubs.js"></script>
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
